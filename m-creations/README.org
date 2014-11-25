@@ -46,3 +46,38 @@ cp m-creations/config-x86_64 .config
 (date > build.log && make  V=s && date) 2>&1 | tee -a build.log
 ```
 
+** Update the feed subtrees
+
+The feed subtrees were added with:
+
+```
+git remote add feed-packages https://github.com/openwrt/packages.git
+git subtree add --squash --prefix=feeds/packages feed-packages master
+
+git remote add feed-luci https://github.com/openwrt/luci.git
+git subtree add --squash --prefix=feeds/luci feed-luci master
+
+git remote add feed-routing https://github.com/openwrt-routing/packages.git
+git subtree add --squash --prefix=feeds/routing feed-routing master
+
+git remote add feed-telephony http://git.openwrt.org/feed/telephony.git
+git subtree add --squash --prefix=feeds/telephony feed-telephony master
+
+git remote add feed-management https://github.com/openwrt-management/packages.git
+git subtree add --squash --prefix=feeds/management feed-management master
+```
+
+With these commands the feeds are updated to the master of those repos:
+
+```
+for f in packages luci routing telephony management ; do
+  echo git subtree pull —prefix=feeds/$f —squash feed-$f master
+done
+
+./scripts/feeds update -i
+./scripts/feeds install -a
+```
+
+If it becomes necessary to patch the feed repos, one can easily
+redefine the feed-<feedname> remote repository URLs.
+
