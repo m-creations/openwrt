@@ -46,6 +46,9 @@ cp m-creations/config-x86_64 .config
 (date > build.log && make  V=s && date) 2>&1 | tee -a build.log
 ```
 
+A clean build on current hardware (with `make -j 1`) takes roughly 1.5
+hours to finish and produces around 550 ipk files which total ~ 70 MB.
+
 ** Update the feed subtrees
 
 The feed subtrees were added with:
@@ -78,6 +81,11 @@ done
 ./scripts/feeds install -a
 ```
 
-If it becomes necessary to patch the feed repos, one can easily
-redefine the feed-<feedname> remote repository URLs.
+If it becomes necessary to patch the feed repos, you can fork the
+package feed, add a  my-feed-<feedname> remote repository
+URL and push a branch to that repo:
 
+```
+git remote add my-feed-packages https://github.com/yourname/packages.git
+git subtree push --prefix=feeds/packages my-feed-packages 20141126-update-freeradius
+```
