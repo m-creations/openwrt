@@ -89,3 +89,39 @@ URL and push a branch to that repo:
 git remote add my-feed-packages https://github.com/yourname/packages.git
 git subtree push --prefix=feeds/packages my-feed-packages 20141126-update-freeradius
 ```
+* Release a new version
+
+Get, build and add [github-release](https://github.com/aktau/github-release) to your path.
+
+export GITHUB_TOKEN=.....
+
+github-release info -u m-creations -r openwrt
+
+github-release release --tag v20141128 \
+  --name "Bashful Bear 2014-11-28" \
+  --description "First pre-release of Barrier Breaker x86_64 optimised for use in Docker containers" \
+  --user m-creations --repo openwrt --pre-release
+
+github-release upload --user m-creations --repo openwrt --tag v20141128 --name openwrt-x86_64-rootfs.tar.gz --file bin/x86_64/openwrt-x86_64-rootfs.tar.gz
+
+for ipk in bin/x86_64/packages/*ipk ; do
+  github-release upload --user m-creations --repo openwrt --tag v20141128 --name $(basename $ipk) --file $ipk
+  sleep 3
+done
+
+Check which files have NOT been uploaded:
+
+tmpfile=`tempfile`
+github-release info -u m-creations -r openwrt | grep artifact: > $tmpfile
+
+for f in bin/x86_64/packages/*ipk; do
+  grep -q $(basename $f) $tmpfile
+  if [ $? != 0 ] ; then
+    github-release -v upload --user m-creations --repo openwrt --tag v20141128 --name $(basename $f) --file $f
+    sleep 3
+  fi
+done
+
+Note that failed files might need to be deleted manually through the
+github web interface, befor above code is run.
+
