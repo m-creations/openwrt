@@ -85,7 +85,7 @@ TARGET_CFLAGS += $(FPIC) -lpthread
 CONFIGURE_ARGS += \
 	--enable-shared \
 	--enable-static \
-	--disable-debug \
+	--enable-debug \
 	--enable-dynamic \
 	--enable-syslog \
 	--disable-local \
