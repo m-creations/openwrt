@@ -24,6 +24,7 @@ PKG_BUILD_PARALLEL:=1
 PKG_USE_MIPS16:=0
 
 PHP7_MODULES = \
+	bz2 \
 	calendar ctype curl \
 	fileinfo \
 	dom \
@@ -39,7 +40,7 @@ PHP7_MODULES = \
 	pcntl pdo pdo-mysql pdo-pgsql pdo-sqlite pgsql phar \
 	session shmop simplexml soap sockets sqlite3 sysvmsg sysvsem sysvshm \
 	tokenizer \
-	xml xmlreader xmlwriter zip \
+	xml xmlreader xmlrpc xmlwriter zip \
 
 PKG_CONFIG_DEPENDS:= \
 	$(patsubst %,CONFIG_PACKAGE_php7-mod-%,$(PHP7_MODULES)) \
@@ -102,6 +103,8 @@ define Package/php7-cli
   $(call Package/php7/Default)
   DEPENDS+= +PACKAGE_php7-mod-intl:libstdcpp
   TITLE+= (CLI)
+  DEPENDS:=+libstdcpp +libpcre +zlib \
+           +PHP7_LIBXML:libxml2
 endef
 
 define Package/php7-cli/description
@@ -113,6 +116,8 @@ define Package/php7-cgi
   $(call Package/php7/Default)
   DEPENDS+= +PACKAGE_php7-mod-intl:libstdcpp
   TITLE+= (CGI & FastCGI)
+  DEPENDS:=+libstdcpp +libpcre +zlib \
+           +PHP7_LIBXML:libxml2
 endef
 
 define Package/php7-cgi/description
@@ -159,6 +164,12 @@ CONFIGURE_ARGS+= \
 	\
 	--with-zlib="$(STAGING_DIR)/usr" \
 	  --with-zlib-dir="$(STAGING_DIR)/usr"
+
+ifneq ($(SDK)$(CONFIG_PACKAGE_php7-mod-bz2),)
+  CONFIGURE_ARGS+= --with-bz2=shared,"$(STAGING_DIR)/usr"
+else
+  CONFIGURE_ARGS+= --without-bz2
+endif
 
 ifneq ($(SDK)$(CONFIG_PACKAGE_php7-mod-calendar),)
   CONFIGURE_ARGS+= --enable-calendar=shared
@@ -409,6 +420,12 @@ else
   CONFIGURE_ARGS+= --disable-xmlreader
 endif
 
+ifneq ($(SDK)$(CONFIG_PACKAGE_php7-mod-xmlrpc),)
+  CONFIGURE_ARGS+= --with-xmlrpc=shared
+else
+  CONFIGURE_ARGS+= --without-xmlrpc
+endif
+
 ifneq ($(SDK)$(CONFIG_PACKAGE_php7-mod-xmlwriter),)
   CONFIGURE_ARGS+= --enable-xmlwriter=shared,"$(STAGING_DIR)/usr"
 else
@@ -551,6 +568,7 @@ $(eval $(call BuildPackage,php7-fastcgi))
 $(eval $(call BuildPackage,php7-fpm))
 
 #$(eval $(call BuildModule,NAME,TITLE[,PKG DEPENDS]))
+$(eval $(call BuildModule,bz2,Bzip 2,+PACKAGE_php7-mod-bz2:bzip2 +PACKAGE_php7-mod-bz2:libbz2))
 $(eval $(call BuildModule,calendar,Calendar))
 $(eval $(call BuildModule,ctype,Ctype))
 $(eval $(call BuildModule,curl,cURL,+PACKAGE_php7-mod-curl:libcurl))
@@ -590,5 +608,6 @@ $(eval $(call BuildModule,sysvshm,System V semaphore))
 $(eval $(call BuildModule,tokenizer,Tokenizer))
 $(eval $(call BuildModule,xml,XML,+PHP7_LIBXML:libxml2 +!PHP7_LIBXML:libexpat))
 $(eval $(call BuildModule,xmlreader,XMLReader,+@PHP7_LIBXML +PACKAGE_php7-mod-xmlreader:libxml2))
+$(eval $(call BuildModule,xmlrpc,XML RPC,+PACKAGE_php7-mod-xmlrpc:libxmlrpc))
 $(eval $(call BuildModule,xmlwriter,XMLWriter,+@PHP7_LIBXML +PACKAGE_php7-mod-xmlwriter:libxml2))
 $(eval $(call BuildModule,zip,ZIP,+PACKAGE_php7-mod-zip:zlib))
