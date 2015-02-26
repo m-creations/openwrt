@@ -89,6 +89,33 @@ URL and push a branch to that repo:
 git remote add my-feed-packages https://github.com/yourname/packages.git
 git subtree push --prefix=feeds/packages my-feed-packages 20141126-update-freeradius
 ```
+** Create a new package
+
+#+BEGIN_SRC
+mkdir feeds/packages/lang/twisted/
+
+# ... create a Makefile and optionally patches
+
+make menuconfig # and add the newly appearing package as module
+
+# I'm not sure if this is really necessary, as ../install also compiles
+#
+# make package/twisted/install V=s | tee build.log
+
+make package/twisted/install V=s | tee build.log
+
+# update Packages.gz
+make package/index
+
+# upload the new file and Packes.gz to github (cf. Release a new version)
+
+ipk=bin/x86_64/packages/twisted_10.2.0-1_x86_64.ipk
+github-release upload --user m-creations --repo openwrt --tag v20141128 --name $(basename $ipk) --file $ipk
+# delete Packages.gz in github manually (not possible with github-release)
+github-release upload --user m-creations --repo openwrt --tag v20141128 --name Packages.gz --file bin/x86_64/packages/Packages.gz
+
+#+END_SRC
+
 * Release a new version
 
 Get, build and add [github-release](https://github.com/aktau/github-release) to your path.
