@@ -96,6 +96,8 @@ mkdir feeds/packages/lang/twisted/
 
 # ... create a Makefile and optionally patches
 
+./scripts/feeds install twisted
+
 make menuconfig # and add the newly appearing package as module
 
 # I'm not sure if this is really necessary, as ../install also compiles
@@ -152,3 +154,8 @@ done
 Note that failed files might need to be deleted manually through the
 github web interface, befor above code is run.
 
+* Rsync binaries and packages to galen web server
+
+sudo rsync -av --delete /export/repo/openwrt/bin/ar71xx/ /var/www/openwrt/snapshot/14-dev/ar71xx/
+
+Note that openwrt.m-creations.net points to haproxy which runs on ports 80 and 443 on galen.
