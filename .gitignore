@@ -1,6 +1,7 @@
 *.o
 .DS_Store
 .*.swp
+/*.log
 /env
 /dl
 /.config
@@ -10,7 +11,8 @@
 /staging_dir
 /tmp
 /logs
-/feeds
+/feeds/*.tmp
+/feeds/*.index
 /feeds.conf
 /files
 /overlay
