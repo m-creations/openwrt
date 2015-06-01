@@ -30,7 +30,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/libmariadbclient/Default
   SECTION:=libs
   CATEGORY:=Libraries
-  DEPENDS:=$(CXX_DEPENDS) +zlib +xz @BROKEN
+  DEPENDS:=$(CXX_DEPENDS) +zlib +xz +libncursesw +libreadline +libevent +libopenssl +libcrypto +libncurses
   TITLE:=MariaDB client library
   URL:=http://mariadb.com/
 endef
@@ -38,7 +38,7 @@ endef
 define Package/mariadb-server
   SECTION:=utils
   CATEGORY:=Utilities
-  DEPENDS:=+libmariadbclient +libpthread +libncursesw +libreadline +libevent +xz
+  DEPENDS:=+libmariadbclient +libpthread
   TITLE:=MariaDB Server
   URL:=http://mariadb.com/
   SUBMENU:=database
@@ -46,20 +46,45 @@ endef
 
 define Package/libmariadbclient
   $(call Package/libmariadbclient/Default)
-  DEPENDS+= +libpthread +libopenssl +libcrypto +libncurses +libevent +libform
+  DEPENDS+=+zlib +xz +libncursesw +libreadline +libevent +libopenssl +libcrypto +libncurses
 endef
 
 define Package/libmariadbclient-r
   $(call Package/libmariadbclient/Default)
   TITLE += threadsafe
-  DEPENDS+= +libpthread +libopenssl +libncurses +libevent +libform
+  DEPENDS+= +libpthread +zlib +xz +libncursesw +libreadline +libevent +libopenssl +libcrypto +libncurses
 endef
 
 CMAKE_OPTIONS += \
+	--debug-trycompile \
+	--debug-output \
+	--trace \
+	-DCMAKE_CROSSCOMPILING:BOOL=TRUE \
 	-DCMAKE_BUILD_TYPE:String="MinSizeRel" \
 	-DCMAKE_PREFIX_PATH=$(STAGING_DIR)/usr \
 	-DWITH_PARTITION_STORAGE_ENGINE:BOOL=ON \
 	-DWITH_UNIT_TESTS:BOOL=OFF \
+	-DXTRADB_OK:BOOL=ON \
+	-DWITHOUT_TOKUDB:BOOL=ON \
+	-DHAVE_LIBMSGPACK:BOOL=FALSE \
+	-DHAVE_LIBEVENT:BOOL=TRUE \
+	-DHAVE_LIBSTEMMER:BOOL=FALSE \
+	-DHAVE_LIBSTEMMER_H:BOOL=FALSE \
+	-DHAVE_PTHREAD_CONDATTR_SETPSHARED:BOOL=FALSE \
+	-DHAVE_PTHREAD_MUTEXATTR_SETPSHARED:BOOL=FALSE \
+	-DHAVE_BACKTRACE:BOOL=FALSE \
+	-DHAVE_LIBEXECINFO:BOOL=FALSE \
+	-DHAVE_MKOSTEMP:BOOL=FALSE \
+	-DHAVE__STRTOUI64:BOOL=FALSE \
+	-DHAVE__STRNICMP:BOOL=FALSE \
+	-DHAVE__STRICMP:BOOL=FALSE \
+	-DHAVE__LOCALTIME64_S:BOOL=FALSE \
+	-DHAVE__GMTIME64_S:BOOL=FALSE \
+	-DWORDS_BIGENDIAN:BOOL=FALSE \
+	-DBIGENDIAN:BOOL=FALSE \
+	-DLIBM:String=m \
+	-DHAVE_LIBM:BOOL=TRUE \
+	-DHAVE_IO_H:BOOL= FALSE \
 	-DSTACK_DIRECTION=-1 \
 	-DWITH_JEMALLOC:STRING=system \
 	-DCURSES_USE_NCURSES=TRUE \
@@ -95,10 +120,6 @@ CMAKE_OPTIONS += \
 # 	mariadb_cv_gcc_atomic_builtins=yes \
 # 	mariadb_cv_gcc_atomic_builtins_pthread_t=yes \
 # 	ac_cv_c_stack_direction=-1
-
-define Build/Configure
-       cd $(PKG_BUILD_DIR) && ./BUILD/compile-pentium64
-endef
 
 define Build/Compile
 	+$(MAKE) $(PKG_JOBS) -C "$(PKG_BUILD_DIR)" \
