@@ -226,7 +226,9 @@ define Image/mkfs/prepare/default
 	- $(FIND) $(TARGET_DIR) -type f -perm +0100 -print0 | $(XARGS) -0 chmod u+rwx,g+rx,o+rx
 	- $(FIND) $(TARGET_DIR) -type d -print0 | $(XARGS) -0 chmod u+rwx,g+rx,o+rx
 	$(INSTALL_DIR) $(TARGET_DIR)/tmp $(TARGET_DIR)/overlay
-	chmod 1777 $(TARGET_DIR)/tmp
+	$(INSTALL_DIR) $(TARGET_DIR)/tmp/run $(TARGET_DIR)/tmp/log $(TARGET_DIR)/tmp/lock $(TARGET_DIR)/tmp/state $(TARGET_DIR)/tmp/.uci $(TARGET_DIR)/tmp/.jail 
+	chmod -R 1777 $(TARGET_DIR)/tmp
+	chmod 0700 $(TARGET_DIR)/tmp/.uci $(TARGET_DIR)/tmp/.jail
 endef
 
 define Image/mkfs/prepare
