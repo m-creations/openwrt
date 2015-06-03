@@ -147,7 +147,7 @@ define Package/base-files/install
 	$(if $(LIB_SUFFIX),-$(LN) lib $(1)/lib$(LIB_SUFFIX))
 	mkdir -p $(1)/mnt
 	mkdir -p $(1)/proc
-	mkdir -p $(1)/tmp
+	mkdir -p $(1)/tmp/{run,log,lock,state}
 	mkdir -p $(1)/usr/lib
 	$(if $(LIB_SUFFIX),-$(LN) lib $(1)/usr/lib$(LIB_SUFFIX))
 	mkdir -p $(1)/usr/bin
