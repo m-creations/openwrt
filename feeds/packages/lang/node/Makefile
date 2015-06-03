@@ -8,15 +8,14 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=node
-PKG_VERSION:=v0.10.35
+PKG_VERSION:=v0.12.4
 PKG_RELEASE:=1
 PKG_INSTALL:=1
 
 PKG_SOURCE:=node-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=http://nodejs.org/dist/${PKG_VERSION}
-PKG_MD5SUM:=2c00d8cf243753996eecdc4f6e2a2d11
+PKG_MD5SUM:=c2b4deea212c0b7c2f86368c65fab312
 
-CLIMITS_INCLUDE="/usr/include/uClibc++"
 include $(INCLUDE_DIR)/package.mk
 
 define Package/node
@@ -41,7 +40,7 @@ define Build/Configure
 endef
 
 define Build/Compile
-	$(MAKE) $(PKG_JOBS) -C $(PKG_BUILD_DIR) CC="$(TARGET_CC)" CXX="$(TARGET_CXX)" CFLAGS="$(TARGET_CFLAGS) $(LIBS)" CXXFLAGS="$(TARGET_CXXFLAGS) -I$(STAGING_DIR)$(CLIMITS_INCLUDE)" LDFLAGS="$(TARGET_LDFLAGS) -nodefaultlibs -lstdc++ -lc -lgcc -lgcc_s -lpthread"
+	$(MAKE) $(PKG_JOBS) -C $(PKG_BUILD_DIR) CC="$(TARGET_CC)" CXX="$(TARGET_CXX)" CFLAGS="$(TARGET_CFLAGS) $(LIBS)" CXXFLAGS="$(TARGET_CXXFLAGS) -I$(STAGING_DIR)$(CLIMITS_INCLUDE)" LDFLAGS="$(TARGET_LDFLAGS) -nodefaultlibs -L$(STAGING_DIR)/usr/lib -L$(STAGING_DIR)/lib -lstdc++ -lc -lgcc $(LIBGCC_S) -lpthread"
 endef
 
 
