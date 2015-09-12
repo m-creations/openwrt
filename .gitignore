@@ -13,6 +13,7 @@
 /logs
 /feeds/*.tmp
 /feeds/*.index
+/feeds/*.targetindex
 /feeds.conf
 /files
 /overlay
