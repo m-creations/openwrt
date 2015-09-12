@@ -1,10 +1,10 @@
 -- ------ extra functions ------ --
 
 function ruleCheck() -- determine if rule needs a protocol specified
-	local sourcePort = ut.trim(sys.exec("uci get -p /var/state mwan3." .. arg[1] .. ".src_port"))
-	local destPort = ut.trim(sys.exec("uci get -p /var/state mwan3." .. arg[1] .. ".dest_port"))
+	local sourcePort = ut.trim(sys.exec("uci -p /var/state get mwan3." .. arg[1] .. ".src_port"))
+	local destPort = ut.trim(sys.exec("uci -p /var/state get mwan3." .. arg[1] .. ".dest_port"))
 	if sourcePort ~= "" or destPort ~= "" then -- ports configured
-		local protocol = ut.trim(sys.exec("uci get -p /var/state mwan3." .. arg[1] .. ".proto"))
+		local protocol = ut.trim(sys.exec("uci -p /var/state get mwan3." .. arg[1] .. ".proto"))
 		if protocol == "" or protocol == "all" then -- no or improper protocol
 			error_protocol = 1
 		end
@@ -80,6 +80,19 @@ proto = mwan_rule:option(Value, "proto", translate("Protocol"),
 	proto:value("icmp")
 	proto:value("esp")
 	cbiAddProtocol(proto)
+
+sticky = mwan_rule:option(ListValue, "sticky", translate("Sticky"),
+	translate("Traffic from the same source IP address that previously matched this rule within the sticky timeout period will use the same WAN interface"))
+	sticky.default = "0"
+	sticky:value("1", translate("Yes"))
+	sticky:value("0", translate("No"))
+
+timeout = mwan_rule:option(Value, "timeout", translate("Sticky timeout"),
+	translate("Seconds. Acceptable values: 1-1000000. Defaults to 600 if not set"))
+	timeout.datatype = "range(1, 1000000)"
+
+ipset = mwan_rule:option(Value, "ipset", translate("IPset"),
+	translate("Name of IPset rule. Requires IPset rule in /etc/dnsmasq.conf (eg \"ipset=/youtube.com/youtube\")"))
 
 use_policy = mwan_rule:option(Value, "use_policy", translate("Policy assigned"))
 	cbiAddPolicy(use_policy)

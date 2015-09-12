@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=python-pip
-PKG_VERSION:=1.5.6
+PKG_VERSION:=7.1.2
 PKG_RELEASE:=1
 
 PKG_SOURCE:=pip-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://pypi.python.org/packages/source/p/pip/
-PKG_MD5SUM:=01026f87978932060cc86c1dc527903e
+PKG_MD5SUM:=3823d2343d9f3aaab21cf9c917710196
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/pip-$(PKG_VERSION)
 PKG_USE_MIPS16:=0
@@ -28,22 +28,23 @@ define Package/python-pip
   TITLE:=Tool for installing Python packages.
   URL:=https://pip.pypa.io
   DEPENDS:=+python +python-setuptools
+  MAINTAINER:=Alexandru Ardelean <ardeleanalex@gmail.com>
 endef
 
 define Package/python-pip/description
   A tool for installing and managing Python packages.
 endef
 
-PYTHONPATH:=$(PKG_INSTALL_DIR)/$(PYTHON_PKG_DIR)
 define Build/Compile
-	$(INSTALL_DIR) $(PYTHONPATH)
 	$(call Build/Compile/PyMod,,\
-		install --prefix="$(PKG_INSTALL_DIR)/usr" \
+		install --root="$(PKG_INSTALL_DIR)" --prefix="/usr" \
+		--single-version-externally-managed \
 	)
 endef
 
 define PyPackage/python-pip/filespec
-+|/usr/lib/python$(PYTHON_VERSION)
++|$(PYTHON_PKG_DIR)
+-|$(PYTHON_PKG_DIR)/pip/_vendor/distlib/*.exe
 endef
 
 define PyPackage/python-pip/install

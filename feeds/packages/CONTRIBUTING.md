@@ -1,12 +1,14 @@
 # Contributing Guidelines  
 (See <http://wiki.openwrt.org/doc/devel/packages> for overall format and construction)
 
+
 All packages you commit or submit by pull-request should follow these simple guidelines:
 
 * Package a version which is still maintained by the upstream author.
 * Will be updated regularly to maintained and supported versions.
 * Have no dependencies outside the OpenWrt core packages or this repository feed.
-* Have been tested to compile with the correct includes and dependencies. Also, test with "Compile with full language support" found under "General Build Settings" set.
+* Have been tested to compile with the correct includes and dependencies. Please also test with "Compile with full language support" found under "General Build Settings" set if language support is relevant to your package.
+* Do NOT use a rolling source file (e.g. foo-latest.tar.gz) or the head of a branch as source for the package since that would create unpredictable builds which change over time.
 * Best of all -- it works as expected!
 
 Makefile contents should contain:
@@ -16,10 +18,11 @@ Makefile contents should contain:
     (E.g.: PKG_MAINTAINER:= Joe D. Hacker `<jdh@jdhs-email-provider.org`>)
 * A PKG_LICENSE tag declaring the main license of the package.
     (E.g.: PKG_LICENSE:=GPL-2.0+) Please use SPDX identifiers if possible (see list at the bottom).
-* An optional PKG_LICENSE_FILE including the filename of the license-file in the source-package.
-    (E.g.: PKG_LICENSE_FILE:=COPYING)
+* An optional PKG_LICENSE_FILES tag including the filenames of the license-files in the source-package.
+    (E.g.: PKG_LICENSE_FILES:=COPYING)
+* PKG_RELEASE should be initially set to 1 or reset to 1 if the software version is changed. You should increment it if the package itself has changed. For example, modifying a support script, changing configure options like --disable* or --enable* switches, or if you changed something in the package which causes the resulting binaries to be different. Changes like correcting md5sums, changing mirror URLs, adding a maintainer field or updating a comment or copyright year in a Makefile do not require a change to PKG_RELEASE.
 
-Commits and pull-requests:
+Commits in your pull-requests should:
 
 * Have a useful description prefixed with the package name  
     (E.g.: "foopkg: Add libzot dependency")

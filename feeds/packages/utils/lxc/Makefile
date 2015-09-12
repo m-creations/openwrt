@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2013-2014 OpenWrt.org
+# Copyright (C) 2013-2015 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -8,24 +8,28 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=lxc
-PKG_VERSION:=1.0.6
-PKG_RELEASE:=1
+PKG_VERSION:=1.1.2
+PKG_RELEASE:=2
 
 PKG_LICENSE:=LGPL-2.1+ BSD-2-Clause GPL-2.0
+PKG_MAINTAINER:=Luka Perkov <luka@openwrt.org>
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=http://linuxcontainers.org/downloads/
-PKG_MD5SUM:=4aad3aee84b42faa194e44091d723a3b
+PKG_SOURCE_URL:=http://linuxcontainers.org/downloads/lxc/
+PKG_MD5SUM:=3ebadacf5fe8bfe689fd7a09812b682c
 
 PKG_BUILD_DEPENDS:=lua
 PKG_BUILD_PARALLEL:=1
+
 PKG_INSTALL:=1
+PKG_FIXUP:=autoreconf
 
 include $(INCLUDE_DIR)/package.mk
 
 LXC_APPLETS_BIN += \
-	attach autostart cgroup clone config console create destroy execute \
-	freeze info monitor snapshot start stop unfreeze unshare usernsexec wait
+	attach autostart cgroup clone config console create destroy device \
+	execute freeze info monitor snapshot start stop unfreeze unshare \
+	usernsexec wait
 
 LXC_APPLETS_LIB += \
 	monitord user-nic
@@ -45,7 +49,6 @@ define Package/lxc/Default
   CATEGORY:=Utilities
   TITLE:=LXC userspace tools
   URL:=http://lxc.sourceforge.net/
-  MAINTAINER:=Luka Perkov <luka@openwrt.org>
 endef
 
 define Package/lxc
@@ -91,7 +94,7 @@ define Package/liblxc
   SECTION:=libs
   CATEGORY:=Libraries
   TITLE:=LXC userspace library
-  DEPENDS:= lxc +libcap +libpthread
+  DEPENDS:= lxc +libcap +libpthread +LXC_SECCOMP:libseccomp
 endef
 
 define Package/lxc-lua
@@ -110,18 +113,18 @@ CONFIGURE_ARGS += \
 	--disable-apparmor \
 	--disable-doc \
 	--disable-examples \
-	--disable-seccomp
 	--enable-lua=yes \
-	--with-lua-pc="$(STAGING_DIR)/usr/lib/pkgconfig/lua.pc" \
+	--with-lua-pc="$(STAGING_DIR)/usr/lib/pkgconfig/lua.pc"
+
+ifeq ($(CONFIG_LXC_SECCOMP),y)
+CONFIGURE_ARGS += --enable-seccomp
+else
+CONFIGURE_ARGS += --disable-seccomp
+endif
 
 MAKE_FLAGS += \
 	LUA_INSTALL_CMOD="/usr/lib/lua" \
 	LUA_INSTALL_LMOD="/usr/lib/lua"
-
-define Build/Configure
-	( cd $(PKG_BUILD_DIR); ./autogen.sh );
-	$(call Build/Configure/Default)
-endef
 
 
 define Build/InstallDev

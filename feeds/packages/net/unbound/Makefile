@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2010-2014 OpenWrt.org
+# Copyright (C) 2010-2015 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -8,16 +8,16 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=unbound
-PKG_VERSION:=1.4.22
+PKG_VERSION:=1.5.4
 PKG_RELEASE:=1
 
 PKG_LICENSE:=BSD-3-Clause
-PKG_LICENSE_FILE:=LICENSE
+PKG_LICENSE_FILES:=LICENSE
 PKG_MAINTAINER:=Michael Hanselmann <public@hansmi.ch>
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=http://www.unbound.net/downloads
-PKG_MD5SUM:=59728c74fef8783f8bad1d7451eba97f
+PKG_MD5SUM:=f85854baad15adc7ce8acefe6cda4cf8
 
 PKG_BUILD_DEPENDS:=libexpat
 PKG_BUILD_PARALLEL:=1
@@ -109,7 +109,6 @@ define Package/libunbound/description
 endef
 
 CONFIGURE_ARGS += \
-	--disable-ecdsa \
 	--disable-gost \
 	--enable-allsymbols \
 	--with-libexpat="$(STAGING_DIR)/usr" \

@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2006-2014 OpenWrt.org
+# Copyright (C) 2006-2015 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -10,17 +10,17 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=ruby
-PKG_VERSION:=2.1.4
+PKG_VERSION:=2.2.3
 PKG_RELEASE:=1
 
-PKG_LIBVER:=2.1
+PKG_LIBVER:=2.2
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_URL:=http://cache.ruby-lang.org/pub/ruby/$(PKG_LIBVER)/
-PKG_MD5SUM:=f4136e781d261e3cc20748005e1740b7
+PKG_MD5SUM:=f49a734729a71774d4a94a9a603114b2
 PKG_MAINTAINER:=Luiz Angelo Daros de Luca <luizluca@gmail.com>
 PKG_LICENSE:=BSD-2-Clause
-PKG_LICENSE_FILE:=COPYING
+PKG_LICENSE_FILES:=COPYING
 
 PKG_BUILD_DEPENDS:=ruby/host
 PKG_INSTALL:=1
@@ -70,12 +70,13 @@ define Package/ruby-stdlib
 $(call Package/ruby/Default)
   TITLE:=Ruby standard libraries (metadata for all stdlib subsets)
   DEPENDS:=ruby +ruby-misc +ruby-bigdecimal +ruby-cgi +ruby-csv +ruby-datetime +ruby-dbm +ruby-debuglib\
-			+ruby-digest +ruby-dl +ruby-drb +ruby-enc +ruby-enc-extra +ruby-erb +ruby-gdbm +ruby-gems \
+			+ruby-digest +ruby-drb +ruby-enc +ruby-enc-extra +ruby-erb +ruby-gdbm +ruby-gems \
 			+ruby-json +ruby-io-console +ruby-irb +ruby-fiddle +ruby-filelib +ruby-logger +ruby-math \
 			+ruby-minitest +ruby-mkmf +ruby-multithread +ruby-nkf +ruby-net +ruby-openssl +ruby-optparse \
-			+ruby-patterns +ruby-prettyprint +ruby-pstore +ruby-psych +ruby-racc +ruby-rake +ruby-rbconfig \
-			+ruby-rdoc +ruby-readline +ruby-rexml +ruby-rinda +ruby-ripper +ruby-rss +ruby-sdbm +ruby-shell \
-			+ruby-socket +ruby-testunit +ruby-uri +ruby-webrick +ruby-xmlrpc +ruby-yaml +ruby-zlib
+			+ruby-patterns +ruby-powerassert +ruby-prettyprint +ruby-pstore +ruby-psych +ruby-racc +ruby-rake \
+			+ruby-rbconfig +ruby-rdoc +ruby-readline +ruby-rexml +ruby-rinda +ruby-ripper +ruby-rss +ruby-sdbm \
+			+ruby-shell +ruby-socket +ruby-testunit +ruby-unicodenormalize +ruby-uri +ruby-webrick +ruby-xmlrpc \
+			+ruby-yaml +ruby-zlib
 endef
 
 define Package/ruby-stdlib/description
@@ -179,17 +180,6 @@ define Package/ruby-digest/config
 			is way bigger than that). However, if OpenSSL is already needed by another usage,
 			as ruby-openssl or any other non ruby package, it is better to mark this option.
 		default n
-
-endef
-
-define Package/ruby-dl
-$(call Package/ruby/Default)
-  TITLE+= (dynamic linker support)
-  DEPENDS:=ruby +ruby-fiddle +ruby-multithread
-endef
-
-define Package/ruby-dl/description
- Provides dl* files. This is deprecated, use fiddle.
 
 endef
 
@@ -306,7 +296,7 @@ endef
 define Package/ruby-filelib
 $(call Package/ruby/Default)
   TITLE+= File utils library
-  DEPENDS:=ruby +ruby-multithread +ruby-enc
+  DEPENDS:=ruby +ruby-enc +ruby-misc
 endef
 
 define Package/ruby-filelib/description
@@ -335,7 +325,7 @@ endef
 define Package/ruby-gems
 $(call Package/ruby/Default)
   TITLE:=Ruby gems packet management
-  DEPENDS:=ruby +ruby-net +ruby-rdoc +ruby-zlib
+  DEPENDS:=ruby +ruby-net +ruby-rdoc
 endef
 
 define Package/ruby-gems/description
@@ -413,12 +403,12 @@ endef
 
 define Package/ruby-minitest
 $(call Package/ruby/Default)
-  TITLE+= minitest bundled with Ruby
-  DEPENDS:=ruby +ruby-filelib +ruby-optparse +ruby-prettyprint +ruby-rbconfig
+  TITLE:=Gem minitest shipped with Ruby
+  DEPENDS:=ruby +ruby-gems
 endef
 
 define Package/ruby-minitest/description
- Provides minitest* files
+ Provides minitest gem
 
 endef
 
@@ -545,6 +535,19 @@ define Package/ruby-patterns/description
 
 endef
 
+define Package/ruby-powerassert
+$(call Package/ruby/Default)
+  TITLE:=Gem power_assert shipped with Ruby
+  DEPENDS:=ruby +ruby-ripper
+endef
+
+define Package/ruby-powerassert/description
+  Power Assert gem for Ruby. Power Assert shows each value of variables
+  and method calls in the expression. It is useful for testing, providing
+  which value wasn't correct when the condition is not satisfied
+
+endef
+
 define Package/ruby-prettyprint
 $(call Package/ruby/Default)
   TITLE:=Ruby PrettyPrint librart
@@ -572,7 +575,7 @@ endef
 define Package/ruby-psych
 $(call Package/ruby/Default)
   TITLE+=YAML parser and emitter
-  DEPENDS:=ruby +ruby-bigdecimal +ruby-datetime +ruby-misc +ruby-enc
+  DEPENDS:=ruby +ruby-bigdecimal +ruby-datetime +ruby-misc +ruby-enc +libyaml
 endef
 
 define Package/ruby-psych/description
@@ -616,7 +619,7 @@ endef
 define Package/ruby-rdoc
 $(call Package/ruby/Default)
   TITLE+= (documentation generator)
-  DEPENDS:=ruby +ruby-erb +ruby-irb +ruby-json +ruby-racc +ruby-rake +ruby-yaml
+  DEPENDS:=ruby +ruby-erb +ruby-irb +ruby-json +ruby-racc +ruby-rake +ruby-yaml +ruby-zlib
 endef
 
 define Package/ruby-rdoc/description
@@ -720,12 +723,23 @@ endef
 
 define Package/ruby-testunit
 $(call Package/ruby/Default)
-  TITLE:=Ruby Test Unit toolkit
-  DEPENDS:=ruby +ruby-minitest
+  TITLE:=Gem test-unit shipped with Ruby
+  DEPENDS:=ruby +ruby-csv +ruby-erb +ruby-optparse +ruby-powerassert +ruby-prettyprint +ruby-rexml +ruby-yaml
 endef
 
 define Package/ruby-testunit/description
  Provides test/unit* files
+
+endef
+
+define Package/ruby-unicodenormalize
+$(call Package/ruby/Default)
+  TITLE:=Ruby String additions for Unicode normalization
+  DEPENDS:=ruby +ruby-enc +ruby-enc-extra
+endef
+
+define Package/ruby-unicodenormalize/description
+  Additions to class String for Unicode normalization
 
 endef
 
@@ -789,16 +803,24 @@ HOST_CONFIGURE_ARGS += \
 	--disable-install-rdoc \
 	--disable-install-capi \
 	--with-static-linked-ext \
+	--with-out-ext=tk,tk/tkutil,win32,win32ole,dbm,gdbm,readline \
+
+# even not used, host build with restricted exts results in gems not being
+# compiling for target (probably some cross compiling problem like checking
+# host for selecting target features)
+#	--with-out-ext \
+#	--with-ext=thread,stringio \
 
 CONFIGURE_ARGS += \
 	--enable-shared \
 	--enable-static \
 	--disable-rpath \
-	--enable-ipv6 \
+	$(call autoconf_bool,CONFIG_IPV6,ipv6) \
 	--disable-install-doc \
 	--disable-install-capi \
 	--with-ruby-version=minor \
 	--with-iconv-dir=$(ICONV_PREFIX) \
+	--with-out-ext=tk,tk/tkutil,win32,win32ole
 
 ifndef CONFIG_RUBY_DIGEST_USE_OPENSSL
 CONFIGURE_ARGS += \
@@ -822,6 +844,8 @@ define Package/ruby/install
 	$(INSTALL_DIR) $(1)/usr/lib/ruby/site_ruby/$(PKG_LIBVER)
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/ruby $(1)/usr/lib/ruby/ruby$(PKG_LIBVER)-bin
 	$(INSTALL_BIN) ./files/ruby $(1)/usr/bin/ruby
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/ruby/vendor_ruby/$(PKG_LIBVER)/* $(1)/usr/lib/ruby/vendor_ruby/$(PKG_LIBVER)/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/ruby/site_ruby/$(PKG_LIBVER)/* $(1)/usr/lib/ruby/site_ruby/$(PKG_LIBVER)/
 	sed -i -e "s%@RUBY_LIBPATH@%/usr/lib/ruby/$(PKG_LIBVER)%" $(1)/usr/bin/ruby
 	sed -i -e "s%@RUBY_BINPATH@%/usr/lib/ruby/ruby$(PKG_LIBVER)-bin%" $(1)/usr/bin/ruby
 endef
@@ -858,7 +882,6 @@ define Package/ruby-datetime/install
 	( cd $(PKG_INSTALL_DIR); $(TAR) -cf - \
 		usr/lib/ruby/$(PKG_LIBVER)/time.rb \
 		usr/lib/ruby/$(PKG_LIBVER)/date.rb \
-		usr/lib/ruby/$(PKG_LIBVER)/date/ \
 		usr/lib/ruby/$(PKG_LIBVER)/*/date_core.so \
 	) | ( cd $(1); $(TAR) -xf - )
 endef
@@ -886,15 +909,6 @@ define Package/ruby-digest/install
 		usr/lib/ruby/$(PKG_LIBVER)/digest.rb \
 		usr/lib/ruby/$(PKG_LIBVER)/*/digest.so \
 		usr/lib/ruby/$(PKG_LIBVER)/*/digest/* \
-	) | ( cd $(1); $(TAR) -xf - )
-endef
-
-define Package/ruby-dl/install
-	( cd $(PKG_INSTALL_DIR); $(TAR) -cf - \
-		usr/lib/ruby/$(PKG_LIBVER)/dl.rb \
-		usr/lib/ruby/$(PKG_LIBVER)/dl \
-		usr/lib/ruby/$(PKG_LIBVER)/*/dl.so \
-		usr/lib/ruby/$(PKG_LIBVER)/*/dl/ \
 	) | ( cd $(1); $(TAR) -xf - )
 endef
 
@@ -963,6 +977,10 @@ define Package/ruby-gems/install
 	$(INSTALL_DIR) $(1)/usr/lib/ruby/$(PKG_LIBVER)
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/ruby/$(PKG_LIBVER)/ubygems.rb $(1)/usr/lib/ruby/$(PKG_LIBVER)/
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/ruby/$(PKG_LIBVER)/rubygems.rb $(1)/usr/lib/ruby/$(PKG_LIBVER)/
+	# Remove tests (avoids extra deps)
+	$(RM) $(PKG_INSTALL_DIR)/usr/lib/ruby/$(PKG_LIBVER)/rubygems/test_case.rb
+	$(RM) $(PKG_INSTALL_DIR)/usr/lib/ruby/$(PKG_LIBVER)/rubygems/package/tar_test_case.rb
+	$(RM) $(PKG_INSTALL_DIR)/usr/lib/ruby/$(PKG_LIBVER)/rubygems/installer_test_case.rb
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/ruby/$(PKG_LIBVER)/rubygems $(1)/usr/lib/ruby/$(PKG_LIBVER)/
 	$(INSTALL_DIR) $(1)/usr/lib/ruby/gems/$(PKG_LIBVER)/specifications/default
 	$(INSTALL_DIR) $(1)/usr/lib/ruby/gems/$(PKG_LIBVER)/gems
@@ -1012,8 +1030,6 @@ define Package/ruby-math/install
 		usr/lib/ruby/$(PKG_LIBVER)/prime.rb \
 		usr/lib/ruby/$(PKG_LIBVER)/mathn.rb \
 		usr/lib/ruby/$(PKG_LIBVER)/cmath.rb \
-		usr/lib/ruby/$(PKG_LIBVER)/complex.rb \
-		usr/lib/ruby/$(PKG_LIBVER)/rational.rb \
 		usr/lib/ruby/$(PKG_LIBVER)/*/mathn \
 		usr/lib/ruby/$(PKG_LIBVER)/matrix.rb \
 		usr/lib/ruby/$(PKG_LIBVER)/matrix \
@@ -1021,10 +1037,12 @@ define Package/ruby-math/install
 endef
 
 define Package/ruby-minitest/install
-	( cd $(PKG_INSTALL_DIR); $(TAR) -cf - \
-		usr/lib/ruby/$(PKG_LIBVER)/minitest/ \
-		usr/lib/ruby/gems/$(PKG_LIBVER)/specifications/default/minitest-*.gemspec \
-	) | ( cd $(1); $(TAR) -xf - )
+	$(INSTALL_DIR) $(1)/usr/lib/ruby/gems/$(PKG_LIBVER)/specifications
+	$(INSTALL_DIR) $(1)/usr/lib/ruby/gems/$(PKG_LIBVER)/gems
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/ruby/gems/$(PKG_LIBVER)/specifications/minitest-*.gemspec $(1)/usr/lib/ruby/gems/$(PKG_LIBVER)/specifications/
+	# Remove tests (avoids extra deps)
+	$(RM) -rf $(PKG_INSTALL_DIR)/usr/lib/ruby/gems/$(PKG_LIBVER)/gems/minitest-*/test
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/ruby/gems/$(PKG_LIBVER)/gems/minitest-* $(1)/usr/lib/ruby/gems/$(PKG_LIBVER)/gems/
 endef
 
 define Package/ruby-misc/install
@@ -1103,6 +1121,7 @@ endef
 define Package/ruby-optparse/install
 	( cd $(PKG_INSTALL_DIR); $(TAR) -cf - \
 		usr/lib/ruby/$(PKG_LIBVER)/optparse.rb \
+		usr/lib/ruby/$(PKG_LIBVER)/optionparser.rb \
 		usr/lib/ruby/$(PKG_LIBVER)/optparse \
 	) | ( cd $(1); $(TAR) -xf - )
 endef
@@ -1113,6 +1132,15 @@ define Package/ruby-patterns/install
 		usr/lib/ruby/$(PKG_LIBVER)/singleton.rb \
 		usr/lib/ruby/$(PKG_LIBVER)/forwardable.rb \
 	) | ( cd $(1); $(TAR) -xf - )
+endef
+
+define Package/ruby-powerassert/install
+	$(INSTALL_DIR) $(1)/usr/lib/ruby/gems/$(PKG_LIBVER)/specifications
+	$(INSTALL_DIR) $(1)/usr/lib/ruby/gems/$(PKG_LIBVER)/gems
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/ruby/gems/$(PKG_LIBVER)/specifications/power_assert-*.gemspec $(1)/usr/lib/ruby/gems/$(PKG_LIBVER)/specifications/
+	# Remove tests (avoids extra deps)
+	$(RM) -rf $(PKG_INSTALL_DIR)/usr/lib/ruby/gems/$(PKG_LIBVER)/gems/power_assert-*/test
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/ruby/gems/$(PKG_LIBVER)/gems/power_assert-* $(1)/usr/lib/ruby/gems/$(PKG_LIBVER)/gems/
 endef
 
 define Package/ruby-prettyprint/install
@@ -1148,6 +1176,8 @@ define Package/ruby-rake/install
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/rake $(1)/usr/bin/
 	$(INSTALL_DIR) $(1)/usr/lib/ruby/$(PKG_LIBVER)
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/ruby/$(PKG_LIBVER)/rake.rb $(1)/usr/lib/ruby/$(PKG_LIBVER)/
+	# Remove tests (avoids extra deps)
+	$(RM) $(PKG_INSTALL_DIR)/usr/lib/ruby/$(PKG_LIBVER)/rake/runtest.rb
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/ruby/$(PKG_LIBVER)/rake $(1)/usr/lib/ruby/$(PKG_LIBVER)/
 	$(INSTALL_DIR) $(1)/usr/lib/ruby/gems/$(PKG_LIBVER)/specifications/default
 	$(INSTALL_DIR) $(1)/usr/lib/ruby/gems/$(PKG_LIBVER)/gems
@@ -1169,6 +1199,10 @@ define Package/ruby-rdoc/install
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/rdoc $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/ri $(1)/usr/bin/
 	$(INSTALL_DIR) $(1)/usr/lib/ruby/$(PKG_LIBVER)
+	# Remove tests (avoids extra deps)
+	$(RM) $(PKG_INSTALL_DIR)/usr/lib/ruby/$(PKG_LIBVER)/rdoc/test_case.rb
+	$(RM) $(PKG_INSTALL_DIR)/usr/lib/ruby/$(PKG_LIBVER)/rdoc/markup/formatter_test_case.rb
+	$(RM) $(PKG_INSTALL_DIR)/usr/lib/ruby/$(PKG_LIBVER)/rdoc/markup/text_formatter_test_case.rb
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/ruby/$(PKG_LIBVER)/rdoc.rb $(1)/usr/lib/ruby/$(PKG_LIBVER)/
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/ruby/$(PKG_LIBVER)/rdoc $(1)/usr/lib/ruby/$(PKG_LIBVER)/
 	$(INSTALL_DIR) $(1)/usr/lib/ruby/gems/$(PKG_LIBVER)/specifications/default
@@ -1225,7 +1259,6 @@ endef
 
 define Package/ruby-socket/install
 	( cd $(PKG_INSTALL_DIR); $(TAR) -cf - \
-		usr/lib/ruby/$(PKG_LIBVER)/gserver.rb \
 		usr/lib/ruby/$(PKG_LIBVER)/ipaddr.rb \
 		usr/lib/ruby/$(PKG_LIBVER)/resolv-replace.rb \
 		usr/lib/ruby/$(PKG_LIBVER)/resolv.rb \
@@ -1235,14 +1268,20 @@ define Package/ruby-socket/install
 endef
 
 define Package/ruby-testunit/install
-	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/testrb $(1)/usr/bin/
-	$(INSTALL_DIR) $(1)/usr/lib/ruby/$(PKG_LIBVER)
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/ruby/$(PKG_LIBVER)/test $(1)/usr/lib/ruby/$(PKG_LIBVER)/
-	$(INSTALL_DIR) $(1)/usr/lib/ruby/gems/$(PKG_LIBVER)/specifications/default
+	$(INSTALL_DIR) $(1)/usr/lib/ruby/gems/$(PKG_LIBVER)/specifications
 	$(INSTALL_DIR) $(1)/usr/lib/ruby/gems/$(PKG_LIBVER)/gems
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/ruby/gems/$(PKG_LIBVER)/specifications/default/test-unit-*.gemspec $(1)/usr/lib/ruby/gems/$(PKG_LIBVER)/specifications/default/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/ruby/gems/$(PKG_LIBVER)/specifications/test-unit-*.gemspec $(1)/usr/lib/ruby/gems/$(PKG_LIBVER)/specifications/
+	# Remove tests (avoids extra deps)
+	$(RM) -rf $(PKG_INSTALL_DIR)/usr/lib/ruby/gems/$(PKG_LIBVER)/gems/test-unit-*/test
+	$(RM) -rf $(PKG_INSTALL_DIR)/usr/lib/ruby/gems/$(PKG_LIBVER)/gems/test-unit-*/sample
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/ruby/gems/$(PKG_LIBVER)/gems/test-unit-* $(1)/usr/lib/ruby/gems/$(PKG_LIBVER)/gems/
+endef
+
+define Package/ruby-unicodenormalize/install
+	( cd $(PKG_INSTALL_DIR); $(TAR) -cf - \
+		usr/lib/ruby/$(PKG_LIBVER)/unicode_normalize.rb \
+		usr/lib/ruby/$(PKG_LIBVER)/unicode_normalize \
+	) | ( cd $(1); $(TAR) -xf - )
 endef
 
 define Package/ruby-uri/install
@@ -1293,7 +1332,6 @@ $(eval $(call BuildPackage,ruby-datetime))
 $(eval $(call BuildPackage,ruby-dbm))
 $(eval $(call BuildPackage,ruby-debuglib))
 $(eval $(call BuildPackage,ruby-digest))
-$(eval $(call BuildPackage,ruby-dl))
 $(eval $(call BuildPackage,ruby-drb))
 $(eval $(call BuildPackage,ruby-enc))
 $(eval $(call BuildPackage,ruby-enc-extra))
@@ -1316,6 +1354,7 @@ $(eval $(call BuildPackage,ruby-nkf))
 $(eval $(call BuildPackage,ruby-openssl))
 $(eval $(call BuildPackage,ruby-optparse))
 $(eval $(call BuildPackage,ruby-patterns))
+$(eval $(call BuildPackage,ruby-powerassert))
 $(eval $(call BuildPackage,ruby-prettyprint))
 $(eval $(call BuildPackage,ruby-pstore))
 $(eval $(call BuildPackage,ruby-psych))
@@ -1332,6 +1371,7 @@ $(eval $(call BuildPackage,ruby-sdbm))
 $(eval $(call BuildPackage,ruby-shell))
 $(eval $(call BuildPackage,ruby-socket))
 $(eval $(call BuildPackage,ruby-testunit))
+$(eval $(call BuildPackage,ruby-unicodenormalize))
 $(eval $(call BuildPackage,ruby-uri))
 $(eval $(call BuildPackage,ruby-webrick))
 $(eval $(call BuildPackage,ruby-xmlrpc))

@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2009-2014 OpenWrt.org
+# Copyright (C) 2009-2015 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -8,20 +8,20 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=gst1-plugins-good
-PKG_VERSION:=1.2.3
+PKG_VERSION:=1.4.5
 PKG_RELEASE:=2
 
 PKG_MAINTAINER:=W. Michael Petullo <mike@flyn.org>
 
 PKG_LICENSE:=LGPLv2
-PKG_LICENSE_FILE:=COPYING
+PKG_LICENSE_FILES:=COPYING
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/gst-plugins-good-$(PKG_VERSION)
 PKG_SOURCE:=gst-plugins-good-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=http://gstreamer.freedesktop.org/src/gst-plugins-good/
-PKG_MD5SUM:=1a1f96bc27ad446e559474299160a9a8
+PKG_MD5SUM:=eaf1a6daf73749bc423feac301d60038
 
-PKG_BUILD_DEPENDS:= libgstreamer1 gstreamer1-plugins-base liboil
+PKG_BUILD_DEPENDS:= libgstreamer1 gstreamer1-plugins-base
 
 PKG_FIXUP:=autoreconf
 PKG_INSTALL:=1
@@ -102,7 +102,6 @@ CONFIGURE_ARGS += \
 	--disable-gconf \
 	--disable-gconftool \
 	--disable-gdk_pixbuf \
-	--disable-gst_v4l2 \
 	--disable-hal \
 	--disable-libcaca \
 	--disable-libdv \
@@ -222,12 +221,12 @@ $(eval $(call GstBuildPlugin,spectrum,spectrum data output,audio fft,,))
 #$(eval $(call GstBuildPlugin,sty4menc,sty4menc support,video,,))
 #$(eval $(call GstBuildPlugin,taglib,taglib support,tag,,))
 $(eval $(call GstBuildPlugin,udp,UDP,net,,))
-#$(eval $(call GstBuildPlugin,video4linux2,video4linux2 support,video,,))
+$(eval $(call GstBuildPlugin,video4linux2,video4linux2 support,video allocators,,+libv4l))
 $(eval $(call GstBuildPlugin,videobox,videobox support,video,,))
 $(eval $(call GstBuildPlugin,videocrop,videocrop support,video,,))
 $(eval $(call GstBuildPlugin,videofilter,videofilter support,video,,))
 $(eval $(call GstBuildPlugin,videomixer,videomixer support,video,,))
-#$(eval $(call GstBuildPlugin,vpx,vpx support,tag video,,))
+$(eval $(call GstBuildPlugin,vpx,vpx support,tag video,,+libvpx))
 $(eval $(call GstBuildPlugin,wavenc,Wav encoder,riff,,))
 #$(eval $(call GstBuildPlugin,wavpack,Wav packer,audio riff tag,,))
 $(eval $(call GstBuildPlugin,wavparse,Wav parser,audio riff tag,,))

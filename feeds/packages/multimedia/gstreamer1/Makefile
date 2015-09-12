@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2008-2014 OpenWrt.org
+# Copyright (C) 2008-2015 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -8,18 +8,18 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=gstreamer1
-PKG_VERSION:=1.2.3
-PKG_RELEASE:=2
+PKG_VERSION:=1.4.5
+PKG_RELEASE:=1
 
 PKG_MAINTAINER:=W. Michael Petullo <mike@flyn.org>
 
 PKG_LICENSE:=LGPLv2
-PKG_LICENSE_FILE:=COPYING
+PKG_LICENSE_FILES:=COPYING
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/gstreamer-$(PKG_VERSION)
 PKG_SOURCE:=gstreamer-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=http://gstreamer.freedesktop.org/src/gstreamer/
-PKG_MD5SUM:=8155b9c7574ccaa361cc504e8e0e72dc
+PKG_MD5SUM:=88a9289c64a4950ebb4f544980234289
 
 PKG_FIXUP:=autoreconf
 PKG_REMOVE_FILES:=autogen.sh aclocal.m4
@@ -161,6 +161,7 @@ define Package/gstreamer1/install
 endef
 
 define Package/gstreamer1-libs/install
+  true
 endef
 
 define Package/gstreamer1-utils/install
@@ -185,6 +186,8 @@ define Package/libgstreamer1/install
 		./usr/lib/gstreamer-$(GST_VERSION)/libgst*.so \
 		$(1)/usr/lib/gstreamer-$(GST_VERSION)/ \
 	)
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/lib/gstreamer-$(GST_VERSION)/gst-plugin-scanner \
+		       $(1)/usr/lib/gstreamer-$(GST_VERSION)
 endef
 
 

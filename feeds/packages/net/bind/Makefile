@@ -9,8 +9,9 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bind
-PKG_VERSION:=9.9.5-P1
+PKG_VERSION:=9.9.7-P3
 PKG_RELEASE:=1
+USERID:=bind=57:bind=57
 
 PKG_MAINTAINER := Noah Meyerhans <frodo@morgul.net>
 PKG_LICENSE := BSD-3-Clause
@@ -19,12 +20,14 @@ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:= \
 	ftp://ftp.isc.org/isc/bind9/$(PKG_VERSION) \
 	http://www.mirrorservice.org/sites/ftp.isc.org/isc/bind9/$(PKG_VERSION)
-PKG_MD5SUM:=3408af8c6d27d6cb8a05287f2ee32ad0
+PKG_MD5SUM:=022a8aca9ca51e1027d77094094eecfd
 
 PKG_FIXUP:=autoreconf
 PKG_REMOVE_FILES:=aclocal.m4 libtool.m4
 
 PKG_INSTALL:=1
+
+PKG_CONFIG_DEPENDS := CONFIG_OPENSSL_WITH_EC
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -99,7 +102,7 @@ CONFIGURE_ARGS += \
 	--enable-epoll=yes \
 	--with-gost=no \
 	--with-gssapi=no \
-	--with-ecdsa=no \
+	--with-ecdsa=$(if $(CONFIG_OPENSSL_WITH_EC),yes,no) \
 	--with-readline=no
 
 CONFIGURE_VARS += \

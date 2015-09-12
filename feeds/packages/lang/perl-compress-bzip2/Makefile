@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2014 OpenWrt.org
+# Copyright (C) 2014, 2015 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=perl-compress-bzip2
-PKG_VERSION:=2.19
-PKG_RELEASE:=1
+PKG_VERSION:=2.22
+PKG_RELEASE:=4
 
 PKG_SOURCE_URL:=http://www.cpan.org/authors/id/R/RU/RURBAN/
 PKG_SOURCE:=Compress-Bzip2-$(PKG_VERSION).tar.gz
-PKG_MD5SUM:=dd4ebb4e88a50cc9a85e282618fdf88f
+PKG_MD5SUM:=0d01b86c3efa74e29bb975aea46b666f
 
 PKG_LICENSE:=GPL-1.0+ Artistic-1.0-Perl
 PKG_MAINTAINER:=Marcel Denia <naoir@gmx.net>
@@ -29,7 +29,7 @@ define Package/perl-compress-bzip2
   CATEGORY:=Languages
   TITLE:=Perl interface to bzip2 compression library
   URL:=http://search.cpan.org/dist/Compress-Bzip2/
-  DEPENDS:=perl +libbz2
+  DEPENDS:=perl +libbz2 +perlbase-autoloader +perlbase-config +perlbase-essential +perlbase-fcntl +perlbase-file +perlbase-getopt +perlbase-test +perlbase-xsloader
 endef
 
 define Build/Configure
