@@ -103,6 +103,10 @@ $(eval $(call Require,ncurses, \
 	Please install ncurses. (Missing libncurses.so or ncurses.h) \
 ))
 
+$(eval $(call TestHostCommand,libbz2, \
+	Please install libbz2. (Missing libbz2.so or bzlib.h), \
+	echo 'int main(int argc, char **argv) { bz_stream strm; BZ2_bzCompressEnd(&strm); return 0; }' | \
+		gcc -include bzlib.h -x c -o $(TMP_DIR)/a.out - -lbz2))
 
 define Require/zlib
 	echo 'int main(int argc, char **argv) { gzdopen(0, "rb"); return 0; }' | \
