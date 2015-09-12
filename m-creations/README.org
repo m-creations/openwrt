@@ -111,10 +111,13 @@ make package/index
 
 # upload the new file and Packes.gz to github (cf. Release a new version)
 
-ipk=bin/x86_64/packages/twisted_10.2.0-1_x86_64.ipk
-github-release upload --user m-creations --repo openwrt --tag v20141128 --name $(basename $ipk) --file $ipk
-# delete Packages.gz in github manually (not possible with github-release)
-github-release upload --user m-creations --repo openwrt --tag v20141128 --name Packages.gz --file bin/x86_64/packages/Packages.gz
+release_tag=v20150602
+ipk=bin/x86-glibc/packages/twisted_10.2.0-1_x86_64.ipk
+github-release upload --user m-creations --repo openwrt --tag $release_tag --name $(basename $ipk) --file $ipk
+# delete Packages.gz, Packages, and Packages.sig in github manually (not possible with github-release)
+github-release upload --user m-creations --repo openwrt --tag $release_tag --name Packages.gz --file bin/x86-glibc/packages/Packages.gz
+github-release upload --user m-creations --repo openwrt --tag $release_tag --name Packages --file bin/x86-glibc/packages/Packages
+github-release upload --user m-creations --repo openwrt --tag $release_tag --name Packages.sig --file bin/x86-glibc/packages/Packages.sig
 
 #+END_SRC
 
@@ -124,17 +127,18 @@ Get, build and add [github-release](https://github.com/aktau/github-release) to 
 
 export GITHUB_TOKEN=.....
 
+release_tag=v20150602
+
 github-release info -u m-creations -r openwrt
 
-github-release release --tag v20141128 \
+github-release release --tag $release_tag \
   --name "Bashful Bear 2014-11-28" \
   --description "First pre-release of Barrier Breaker x86_64 optimised for use in Docker containers" \
   --user m-creations --repo openwrt --pre-release
 
-github-release upload --user m-creations --repo openwrt --tag v20141128 --name openwrt-x86_64-rootfs.tar.gz --file bin/x86_64/openwrt-x86_64-rootfs.tar.gz
-
-for ipk in bin/x86_64/packages/*ipk ; do
-  github-release upload --user m-creations --repo openwrt --tag v20141128 --name $(basename $ipk) --file $ipk
+github-release upload --user m-creations --repo openwrt --tag $release_tag --name openwrt-x86-glibc-rootfs.tar.gz --file bin/x86-glibc/openwrt-${release_tag}-x86-64-rootfs.tar.gz 
+for ipk in bin/x86-glibc/packages/*ipk ; do
+  github-release upload --user m-creations --repo openwrt --tag $release_tag --name $(basename $ipk) --file $ipk
   sleep 3
 done
 
@@ -143,13 +147,20 @@ Check which files have NOT been uploaded:
 tmpfile=`tempfile`
 github-release info -u m-creations -r openwrt | grep artifact: > $tmpfile
 
-for f in bin/x86_64/packages/*ipk; do
+for f in bin/x86-glibc/packages/*ipk; do
   grep -q $(basename $f) $tmpfile
   if [ $? != 0 ] ; then
-    github-release -v upload --user m-creations --repo openwrt --tag v20141128 --name $(basename $f) --file $f
+    github-release -v upload --user m-creations --repo openwrt --tag $release_tag --name $(basename $f) --file $f
     sleep 3
   fi
 done
+
+Upload the package list with signature:
+
+github-release upload --user m-creations --repo openwrt --tag $release_tag --name Packages.gz --file bin/x86-glibc/packages/Packages.gz
+github-release upload --user m-creations --repo openwrt --tag $release_tag --name Packages --file bin/x86-glibc/packages/Packages
+github-release upload --user m-creations --repo openwrt --tag $release_tag --name Packages.sig --file bin/x86-glibc/packages/Packages.sig
+
 
 Note that failed files might need to be deleted manually through the
 github web interface, befor above code is run.
