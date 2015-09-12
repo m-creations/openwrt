@@ -30,6 +30,11 @@ define sep
 
 endef
 
+define newline
+
+
+endef
+
 _SINGLE=export MAKEFLAGS=$(space);
 CFLAGS:=
 ARCH:=$(subst i486,i386,$(subst i586,i386,$(subst i686,i386,$(call qstrip,$(CONFIG_ARCH)))))
@@ -84,7 +89,7 @@ ifeq ($(CONFIG_EXTERNAL_TOOLCHAIN),)
   REAL_GNU_TARGET_NAME=$(OPTIMIZE_FOR_CPU)-openwrt-linux$(if $(TARGET_SUFFIX),-$(TARGET_SUFFIX))
   GNU_TARGET_NAME=$(OPTIMIZE_FOR_CPU)-openwrt-linux
   DIR_SUFFIX:=_$(LIBC)-$(LIBCV)$(if $(CONFIG_arm),_eabi)
-  BIN_DIR:=$(BIN_DIR)$(if $(CONFIG_USE_UCLIBC),,-$(LIBC))
+  BIN_DIR:=$(BIN_DIR)$(if $(CONFIG_USE_MUSL),,-$(LIBC))
   TARGET_DIR_NAME = target-$(ARCH)$(ARCH_SUFFIX)$(DIR_SUFFIX)$(if $(BUILD_SUFFIX),_$(BUILD_SUFFIX))
   TOOLCHAIN_DIR_NAME = toolchain-$(ARCH)$(ARCH_SUFFIX)_gcc-$(GCCV)$(DIR_SUFFIX)
 else
@@ -111,7 +116,7 @@ STAGING_DIR_ROOT:=$(STAGING_DIR)/root-$(BOARD)
 BUILD_LOG_DIR:=$(TOPDIR)/logs
 PKG_INFO_DIR := $(STAGING_DIR)/pkginfo
 
-TARGET_PATH:=$(STAGING_DIR_HOST)/bin:$(subst $(space),:,$(filter-out .,$(filter-out ./,$(subst :,$(space),$(PATH)))))
+TARGET_PATH:=$(subst $(space),:,$(filter-out .,$(filter-out ./,$(subst :,$(space),$(PATH)))))
 TARGET_CFLAGS:=$(TARGET_OPTIMIZATION)$(if $(CONFIG_DEBUG), -g3) $(EXTRA_OPTIMIZATION)
 TARGET_CXXFLAGS = $(TARGET_CFLAGS)
 TARGET_ASFLAGS_DEFAULT = $(TARGET_CFLAGS)
@@ -138,8 +143,12 @@ ifndef DUMP
     -include $(TOOLCHAIN_DIR)/info.mk
     export GCC_HONOUR_COPTS:=0
     TARGET_CROSS:=$(if $(TARGET_CROSS),$(TARGET_CROSS),$(OPTIMIZE_FOR_CPU)-openwrt-linux$(if $(TARGET_SUFFIX),-$(TARGET_SUFFIX))-)
-    TARGET_CFLAGS+= -fhonour-copts $(if $(CONFIG_GCC_VERSION_4_4)$(CONFIG_GCC_VERSION_4_5),,-Wno-error=unused-but-set-variable)
-    TARGET_CPPFLAGS+= -I$(TOOLCHAIN_DIR)/usr/include -I$(TOOLCHAIN_DIR)/include
+    TARGET_CFLAGS+= -fhonour-copts -Wno-error=unused-but-set-variable
+    TARGET_CPPFLAGS+= -I$(TOOLCHAIN_DIR)/usr/include
+    ifeq ($(CONFIG_USE_MUSL),y)
+      TARGET_CPPFLAGS+= -I$(TOOLCHAIN_DIR)/include/fortify
+    endif
+    TARGET_CPPFLAGS+= -I$(TOOLCHAIN_DIR)/include
     TARGET_LDFLAGS+= -L$(TOOLCHAIN_DIR)/usr/lib -L$(TOOLCHAIN_DIR)/lib
     TARGET_PATH:=$(TOOLCHAIN_DIR)/bin:$(TARGET_PATH)
   else
@@ -192,15 +201,31 @@ HOST_CPPFLAGS:=-I$(STAGING_DIR_HOST)/include -I$(STAGING_DIR_HOST)/usr/include
 HOST_CFLAGS:=-O2 $(HOST_CPPFLAGS)
 HOST_LDFLAGS:=-L$(STAGING_DIR_HOST)/lib -L$(STAGING_DIR_HOST)/usr/lib
 
+ifeq ($(CONFIG_GCC_VERSION_4_6)$(CONFIG_EXTERNAL_TOOLCHAIN),)
+  TARGET_AR:=$(TARGET_CROSS)gcc-ar
+  TARGET_RANLIB:=$(TARGET_CROSS)gcc-ranlib
+  TARGET_NM:=$(TARGET_CROSS)gcc-nm
+else
+  TARGET_AR:=$(TARGET_CROSS)ar
+  TARGET_RANLIB:=$(TARGET_CROSS)ranlib
+  TARGET_NM:=$(TARGET_CROSS)nm
+endif
+
+BUILD_KEY=$(TOPDIR)/key-build
+
 TARGET_CC:=$(TARGET_CROSS)gcc
-TARGET_AR:=$(TARGET_CROSS)ar
-TARGET_RANLIB:=$(TARGET_CROSS)ranlib
 TARGET_CXX:=$(TARGET_CROSS)g++
 KPATCH:=$(SCRIPT_DIR)/patch-kernel.sh
 SED:=$(STAGING_DIR_HOST)/bin/sed -i -e
 CP:=cp -fpR
 LN:=ln -sf
 XARGS:=xargs -r
+
+BASH:=bash
+TAR:=tar
+FIND:=find
+PATCH:=patch
+PYTHON:=python
 
 INSTALL_BIN:=install -m0755
 INSTALL_DIR:=install -d -m0755
@@ -223,14 +248,14 @@ ifneq ($(CONFIG_CCACHE),)
 endif
 
 TARGET_CONFIGURE_OPTS = \
-  AR=$(TARGET_CROSS)ar \
+  AR="$(TARGET_AR)" \
   AS="$(TARGET_CC) -c $(TARGET_ASFLAGS)" \
   LD=$(TARGET_CROSS)ld \
-  NM=$(TARGET_CROSS)nm \
+  NM="$(TARGET_NM)" \
   CC="$(TARGET_CC)" \
   GCC="$(TARGET_CC)" \
   CXX="$(TARGET_CXX)" \
-  RANLIB=$(TARGET_CROSS)ranlib \
+  RANLIB="$(TARGET_RANLIB)" \
   STRIP=$(TARGET_CROSS)strip \
   OBJCOPY=$(TARGET_CROSS)objcopy \
   OBJDUMP=$(TARGET_CROSS)objdump \
@@ -255,6 +280,7 @@ else
     NM="$(TARGET_CROSS)nm" \
     STRIP="$(STRIP)" \
     STRIP_KMOD="$(SCRIPT_DIR)/strip-kmod.sh" \
+    PATCHELF="$(STAGING_DIR_HOST)/bin/patchelf" \
     $(SCRIPT_DIR)/rstrip.sh
 endif
 

@@ -9,6 +9,10 @@
 		};
 	};
 
+	chosen {
+		bootargs = "console=ttyS0,57600";
+	};
+
 	cpuintc: cpuintc@0 {
 		#address-cells = <0>;
 		#interrupt-cells = <1>;
@@ -19,7 +23,7 @@
 	palmbus@10000000 {
 		compatible = "palmbus";
 		reg = <0x10000000 0x200000>;
-                ranges = <0x0 0x10000000 0x1FFFFF>;
+		ranges = <0x0 0x10000000 0x1FFFFF>;
 
 		#address-cells = <1>;
 		#size-cells = <1>;
@@ -131,24 +135,88 @@
 			pinctrl-names = "default";
 			pinctrl-0 = <&uart0_pins>;
 		};
+
+		uart1@d00 {
+			compatible = "ns16550a";
+			reg = <0xd00 0x100>;
+
+			reg-shift = <2>;
+			reg-io-width = <4>;
+			no-loopback-test;
+
+			resets = <&rstctrl 19>;
+			reset-names = "uart1";
+
+			interrupt-parent = <&intc>;
+			interrupts = <21>;
+
+			pinctrl-names = "default";
+			pinctrl-0 = <&uart1_pins>;
+
+			status = "disabled";
+		};
+
+		uart2@e00 {
+			compatible = "ns16550a";
+			reg = <0xe00 0x100>;
+
+			reg-shift = <2>;
+			reg-io-width = <4>;
+			no-loopback-test;
+
+			resets = <&rstctrl 20>;
+			reset-names = "uart2";
+
+			interrupt-parent = <&intc>;
+			interrupts = <22>;
+
+			pinctrl-names = "default";
+			pinctrl-0 = <&uart2_pins>;
+
+			status = "disabled";
+		};
 	};
 
 	pinctrl {
 		compatible = "ralink,rt2880-pinmux";
 		pinctrl-names = "default";
 		pinctrl-0 = <&state_default>;
+
 		state_default: pinctrl0 {
 		};
+
 		spi_pins: spi {
 			spi {
 				ralink,group = "spi";
 				ralink,function = "spi";
 			};
 		};
+
 		uart0_pins: uartlite {
-			uart {
+			uartlite {
 				ralink,group = "uart0";
-				ralink,function = "uart";
+				ralink,function = "uart0";
+			};
+		};
+
+		uart1_pins: uart1 {
+			uart1 {
+				ralink,group = "uart1";
+				ralink,function = "uart1";
+			};
+		};
+
+		uart2_pins: uart2 {
+			uart2 {
+				ralink,group = "uart2";
+				ralink,function = "uart2";
+			};
+		};
+
+		sdxc_pins: sdxc {
+			sdxc {
+				ralink,group = "sdmode";
+				ralink,function = "sdxc";
 			};
 		};
 	};
@@ -158,8 +226,9 @@
 		#reset-cells = <1>;
 	};
 
-	usbphy {
+	usbphy: usbphy {
 		compatible = "ralink,mt7628an-usbphy", "ralink,mt7620a-usbphy";
+		#phy-cells = <1>;
 
 		resets = <&rstctrl 22>;
 		reset-names = "host";
@@ -172,12 +241,18 @@
 		interrupt-parent = <&intc>;
 		interrupts = <14>;
 
+		pinctrl-names = "default";
+		pinctrl-0 = <&sdxc_pins>;
+
 		status = "disabled";
 	};
 
 	ehci@101c0000 {
 		compatible = "ralink,rt3xxx-ehci";
 		reg = <0x101c0000 0x1000>;
+
+		phys = <&usbphy 1>;
+		phy-names = "usb";
 
 		interrupt-parent = <&intc>;
 		interrupts = <18>;
@@ -186,6 +261,9 @@
 	ohci@101c1000 {
 		compatible = "ralink,rt3xxx-ohci";
 		reg = <0x101c1000 0x1000>;
+
+		phys = <&usbphy 1>;
+		phy-names = "usb";
 
 		interrupt-parent = <&intc>;
 		interrupts = <18>;
@@ -197,11 +275,17 @@
 
 		interrupt-parent = <&cpuintc>;
 		interrupts = <5>;
+
+		resets = <&rstctrl 21 &rstctrl 23>;
+		reset-names = "fe", "esw";
 	};
 
 	esw@10110000 {
 		compatible = "ralink,rt3050-esw";
 		reg = <0x10110000 8000>;
+
+		resets = <&rstctrl 23>;
+		reset-names = "esw";
 
 		interrupt-parent = <&intc>;
 		interrupts = <17>;
@@ -240,5 +324,4 @@
 			device_type = "pci";
 		};
 	};
-
 };

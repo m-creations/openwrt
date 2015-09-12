@@ -12,7 +12,7 @@ out the configuration than the in kernel cfe config reader.
 +obj-y				+= cfe_env.o
 --- /dev/null
 +++ b/arch/mips/bcm47xx/cfe_env.c
-@@ -0,0 +1,229 @@
+@@ -0,0 +1,228 @@
 +/*
 + * CFE environment variable access
 + *
@@ -138,8 +138,7 @@ out the configuration than the in kernel cfe config reader.
 + * @return	value of variable or NULL if undefined
 + */
 +
-+char* 
-+cfe_env_get(unsigned char *nv_buf, char* name)
++char *cfe_env_get(unsigned char *nv_buf, const char *name)
 +{
 +    int size;
 +    unsigned char *buffer;
@@ -244,25 +243,25 @@ out the configuration than the in kernel cfe config reader.
 +
 --- a/arch/mips/bcm47xx/nvram.c
 +++ b/arch/mips/bcm47xx/nvram.c
-@@ -22,6 +22,8 @@
- 
+@@ -37,6 +37,8 @@ struct nvram_header {
  static char nvram_buf[NVRAM_SPACE];
+ static size_t nvram_len;
  static const u32 nvram_sizes[] = {0x8000, 0xF000, 0x10000};
 +static int cfe_env;
 +extern char *cfe_env_get(char *nv_buf, const char *name);
  
- static u32 find_nvram_size(u32 end)
+ static u32 find_nvram_size(void __iomem *end)
  {
-@@ -46,6 +48,26 @@ static int nvram_find_and_copy(u32 base,
- 	u32 *src, *dst;
- 	u32 size;
+@@ -66,6 +68,26 @@ static int nvram_find_and_copy(void __io
+ 		return -EEXIST;
+ 	}
  
 +	cfe_env = 0;
 +
 +	/* XXX: hack for supporting the CFE environment stuff on WGT634U */
 +	if (lim >= 8 * 1024 * 1024) {
-+		src = (u32 *) KSEG1ADDR(base + 8 * 1024 * 1024 - 0x2000);
-+		dst = (u32 *) nvram_buf;
++		src = (u32 *)(iobase + 8 * 1024 * 1024 - 0x2000);
++		dst = (u32 *)nvram_buf;
 +
 +		if ((*src & 0xff00ff) == 0x000001) {
 +			printk("early_nvram_init: WGT634U NVRAM found.\n");
@@ -280,9 +279,9 @@ out the configuration than the in kernel cfe config reader.
  	/* TODO: when nvram is on nand flash check for bad blocks first. */
  	off = FLASH_MIN;
  	while (off <= lim) {
-@@ -172,6 +194,13 @@ int bcm47xx_nvram_getenv(char *name, cha
- 			return err;
- 	}
+@@ -180,6 +202,13 @@ int bcm47xx_nvram_getenv(const char *nam
+ 	if (!name)
+ 		return -EINVAL;
  
 +	if (cfe_env) {
 +		value = cfe_env_get(nvram_buf, name);
@@ -291,6 +290,6 @@ out the configuration than the in kernel cfe config reader.
 +		return snprintf(val, val_len, "%s", value);
 +	}
 +
- 	/* Look for name=value and return value */
- 	var = &nvram_buf[sizeof(struct nvram_header)];
- 	end = nvram_buf + sizeof(nvram_buf) - 2;
+ 	if (!nvram_len) {
+ 		err = nvram_init();
+ 		if (err)
