@@ -12,7 +12,7 @@ PKG_VERSION:=1.2.4
 PKG_RELEASE:=3
 
 PKG_LICENSE:=GPLv2
-PKG_LICENSE_FILE:=COPYING
+PKG_LICENSE_FILES:=COPYING
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_URL:=@SF/bogofilter
@@ -35,7 +35,10 @@ define Package/bogofilter/description
 	Bogofilter is a fast Bayesian spam filter
 endef
 
-CONFIGURE_ARGS += --disable-unicode
+CONFIGURE_ARGS += \
+	--disable-unicode \
+	--with-libdb-prefix=$(STAGING_DIR) \
+	--with-included-gsl
 
 define Package/bogofilter/install
 	$(INSTALL_DIR)  $(1)/etc/ \

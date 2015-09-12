@@ -3,10 +3,10 @@
 function ruleCheck() -- determine if rules needs a proper protocol configured
 	uci.cursor():foreach("mwan3", "rule",
 		function (section)
-			local sourcePort = ut.trim(sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".src_port"))
-			local destPort = ut.trim(sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".dest_port"))
+			local sourcePort = ut.trim(sys.exec("uci -p /var/state get mwan3." .. section[".name"] .. ".src_port"))
+			local destPort = ut.trim(sys.exec("uci -p /var/state get mwan3." .. section[".name"] .. ".dest_port"))
 			if sourcePort ~= "" or destPort ~= "" then -- ports configured
-				local protocol = ut.trim(sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".proto"))
+				local protocol = ut.trim(sys.exec("uci -p /var/state get mwan3." .. section[".name"] .. ".proto"))
 				if protocol == "" or protocol == "all" then -- no or improper protocol
 					error_protocol_list = error_protocol_list .. section[".name"] .. " "
 				end
@@ -86,6 +86,39 @@ proto = mwan_rule:option(DummyValue, "proto", translate("Protocol"))
 	proto.rawhtml = true
 	function proto.cfgvalue(self, s)
 		return self.map:get(s, "proto") or "all"
+	end
+
+sticky = mwan_rule:option(DummyValue, "sticky", translate("Sticky"))
+	sticky.rawhtml = true
+	function sticky.cfgvalue(self, s)
+		if self.map:get(s, "sticky") == "1" then
+			stickied = 1
+			return "Yes"
+		else
+			stickied = nil
+			return "No"
+		end
+	end
+
+timeout = mwan_rule:option(DummyValue, "timeout", translate("Sticky timeout"))
+	timeout.rawhtml = true
+	function timeout.cfgvalue(self, s)
+		if stickied then
+			local timeoutValue = self.map:get(s, "timeout")
+			if timeoutValue then
+				return timeoutValue .. "s"
+			else
+				return "600s"
+			end
+		else
+			return "&#8212;"
+		end
+	end
+
+ipset = mwan_rule:option(DummyValue, "ipset", translate("IPset"))
+	ipset.rawhtml = true
+	function ipset.cfgvalue(self, s)
+		return self.map:get(s, "ipset") or "&#8212;"
 	end
 
 use_policy = mwan_rule:option(DummyValue, "use_policy", translate("Policy assigned"))

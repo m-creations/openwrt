@@ -8,8 +8,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=attr
-PKG_REV:=50fc862d69984089ce09138b3350ee7762290403
-PKG_VERSION:=20140610
+PKG_REV:=c252ef434219891f616d891b46aad6b06efdd185
+PKG_VERSION:=20150220
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
@@ -17,10 +17,13 @@ PKG_SOURCE_URL:=git://git.sv.gnu.org/attr.git
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE_VERSION:=$(PKG_REV)
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_MAINTAINER:=Maxim Storchak <m.storchak@gmail.com>
-PKG_INSTALL:=1
+
 PKG_LICENSE:=LGPL-2.1 GPL-2.0
+PKG_LICENSE_FILES:=doc/COPYING doc/COPYING.LGPL
+
+PKG_INSTALL:=1
+PKG_FIXUP:=autoreconf
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -63,11 +66,6 @@ $(call Package/attr/Default/description)
 endef
 
 CONFIGURE_ARGS += --enable-static --enable-shared
-
-define Build/Prepare
-	$(call Build/Prepare/Default)
-	(cd $(PKG_BUILD_DIR); ./autogen.sh;);
-endef
 
 define Package/attr/install
 	$(INSTALL_DIR) $(1)/usr/bin

@@ -8,8 +8,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=acl
-PKG_REV:=f2a5f57a20ffa007abc1fa24df1f76e18b74a425
-PKG_VERSION:=20140610
+PKG_REV:=62ce6354ef5a8eb5644908748f79c8cd18474d4c
+PKG_VERSION:=20140812
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
@@ -17,10 +17,13 @@ PKG_SOURCE_URL:=git://git.sv.gnu.org/acl.git
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE_VERSION:=$(PKG_REV)
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_MAINTAINER:=Maxim Storchak <m.storchak@gmail.com>
-PKG_INSTALL:=1
+
 PKG_LICENSE:=LGPL-2.1 GPL-2.0
+PKG_LICENSE_FILES:=doc/COPYING doc/COPYING.LGPL
+
+PKG_INSTALL:=1
+PKG_FIXUP:=autoreconf
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -64,11 +67,6 @@ $(call Package/acl/Default/description)
 endef
 
 CONFIGURE_ARGS += --enable-static --enable-shared
-
-define Build/Prepare
-	$(call Build/Prepare/Default)
-	(cd $(PKG_BUILD_DIR); ./autogen.sh;);
-endef
 
 define Package/acl/install
 	$(INSTALL_DIR) $(1)/usr/bin

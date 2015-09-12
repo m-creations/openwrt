@@ -8,13 +8,14 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=icecast
-PKG_VERSION:=2.4.0
+PKG_VERSION:=2.4.2
 PKG_RELEASE:=1
-PKG_MAINTAINER:=André Gaul <gaul@web-yard.de>
+PKG_LICENSE:=GPL-2.0
+PKG_MAINTAINER:=André Gaul <andre@gaul.io>
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=http://downloads.us.xiph.org/releases/icecast/
-PKG_MD5SUM:=bb00bfc0d6d2dde24974641085602b81
+PKG_SOURCE_URL:=http://downloads.xiph.org/releases/icecast/
+PKG_MD5SUM:=55947c83d31dfcbbede58c9521c676f4
 
 PKG_FIXUP:=autoreconf
 

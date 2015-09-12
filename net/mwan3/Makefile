@@ -8,8 +8,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=mwan3
-PKG_VERSION:=1.5
-PKG_RELEASE:=8
+PKG_VERSION:=1.6
+PKG_RELEASE:=2
 PKG_MAINTAINER:=Jeroen Louwes <jeroen.louwes@gmail.com>
 PKG_LICENSE:=GPLv2
 
@@ -19,7 +19,7 @@ define Package/mwan3
    SECTION:=net
    CATEGORY:=Network
    SUBMENU:=Routing and Redirection
-   DEPENDS:=+ip +iptables +iptables-mod-conntrack-extra +iptables-mod-ipopt
+   DEPENDS:=+ip +ipset +iptables +iptables-mod-conntrack-extra +iptables-mod-ipopt
    TITLE:=Multiwan hotplug script with connection tracking support
    MAINTAINER:=Jeroen Louwes <jeroen.louwes@gmail.com>
    PKGARCH:=all
@@ -32,14 +32,14 @@ interfaces, connection tracking and an easy to manage traffic ruleset.
 endef
 
 define Package/mwan3/conffiles
-   /etc/config/mwan3
+/etc/config/mwan3
 endef
 
 define Build/Compile
 endef
 
 define Package/mwan3/install
-   $(CP) ./files/* $(1)
+$(CP) ./files/* $(1)
 endef
 
 $(eval $(call BuildPackage,mwan3))

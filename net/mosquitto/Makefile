@@ -9,19 +9,17 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=mosquitto
-PKG_VERSION:=1.3.5
-PKG_RELEASE:=1
+PKG_VERSION:=1.4.3
+PKG_RELEASE:=2
 PKG_LICENSE:=BSD-3-Clause
-PKG_LICENSE_FILE:=LICENSE.txt
+PKG_LICENSE_FILES:=LICENSE.txt
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=http://mosquitto.org/files/source/
-PKG_MD5SUM:=55094ad4dc7c7985377f43d4fc3d09da
+PKG_MD5SUM:=1c1c750525546bc13d8d72e56a0742a7
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(BUILD_VARIANT)/$(PKG_NAME)-$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
-
-MAKE_FLAGS+=WITH_MEMORY_TRACKING=no
 
 define Package/$(PKG_NAME)/default
   SECTION:=net
@@ -29,14 +27,14 @@ define Package/$(PKG_NAME)/default
   TITLE:=mosquitto - an MQTT message broker
   URL:=http://www.mosquitto.org/
   MAINTAINER:=Karl Palsson <karlp@remake.is>
-  DEPENDS:= +librt
+  DEPENDS:= +librt +libuuid
   USERID:=mosquitto=200:mosquitto=200
 endef
 
 define Package/$(PKG_NAME)
     $(call Package/mosquitto/default)
     TITLE+= (with SSL support)
-    DEPENDS+= +libopenssl
+    DEPENDS+= +libopenssl +MOSQUITTO_LWS:libwebsockets-openssl
     VARIANT:=ssl
 endef
 
@@ -44,6 +42,10 @@ define Package/$(PKG_NAME)-nossl
     $(call Package/$(PKG_NAME)/default)
     TITLE+= (without SSL support)
     VARIANT:=nossl
+endef
+
+define Package/$(PKG_NAME)/config
+	source "$(SOURCE)/Config.in"
 endef
 
 define Package/$(PKG_NAME)/default/description
@@ -181,8 +183,11 @@ endef
 Package/libmosquitto-nossl/install = $(Package/libmosquitto/install)
 
 # Applies to all...
+MAKE_FLAGS += WITH_DOCS=no
 ifeq ($(BUILD_VARIANT),nossl)
-        MAKE_FLAGS += WITH_TLS=no
+        MAKE_FLAGS += WITH_TLS=no WITH_WEBSOCKETS=no
+else
+	MAKE_FLAGS += WITH_WEBSOCKETS=$(if $(CONFIG_MOSQUITTO_LWS),"yes","no")
 endif
 
 $(eval $(call BuildPackage,$(PKG_NAME)))

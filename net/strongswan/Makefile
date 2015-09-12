@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2012-2014 OpenWrt.org
+# Copyright (C) 2012-2015 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=strongswan
-PKG_VERSION:=5.2.1
+PKG_VERSION:=5.3.3
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_URL:=http://download.strongswan.org/ http://download2.strongswan.org/
-PKG_MD5SUM:=dd3717c0aa59ab4591ca1812941ebb82
+PKG_MD5SUM:=5a25f3d1c31a77ef44d14a2e7b3eaad0
 PKG_LICENSE:=GPL-2.0+
 PKG_MAINTAINER:=Steven Barth <cyrus@openwrt.org>
 
@@ -39,6 +39,7 @@ PKG_MOD_AVAILABLE:= \
 	eap-md5 \
 	eap-mschapv2 \
 	eap-radius \
+	eap-tls \
 	farp \
 	fips-prf \
 	gcm \
@@ -56,14 +57,16 @@ PKG_MOD_AVAILABLE:= \
 	md5 \
 	mysql \
 	openssl \
-	padlock \
 	pem \
 	pgp \
 	pkcs1 \
+	pkcs7 \
 	pkcs8 \
 	pkcs11 \
+	pkcs12 \
 	pubkey \
 	random \
+	rc2 \
 	resolve \
 	revocation \
 	sha1 \
@@ -73,6 +76,7 @@ PKG_MOD_AVAILABLE:= \
 	socket-dynamic \
 	sql \
 	sqlite \
+	sshkey \
 	stroke \
 	test-vectors \
 	unity \
@@ -111,7 +115,7 @@ define Package/strongswan
 $(call Package/strongswan/Default)
   DEPENDS:= +libpthread +ip \
 	+kmod-crypto-authenc \
-	+kmod-ipsec +kmod-ipsec4 +kmod-ipsec6 \
+	+kmod-ipsec +kmod-ipsec4 +IPV6:kmod-ipsec6 \
 	+kmod-ipt-ipsec +iptables-mod-ipsec
 endef
 
@@ -150,6 +154,7 @@ $(call Package/strongswan/Default)
 	+strongswan-mod-eap-md5 \
 	+strongswan-mod-eap-mschapv2 \
 	+strongswan-mod-eap-radius \
+	+strongswan-mod-eap-tls \
 	+strongswan-mod-farp \
 	+strongswan-mod-fips-prf \
 	+strongswan-mod-gcm \
@@ -166,14 +171,16 @@ $(call Package/strongswan/Default)
 	+strongswan-mod-md5 \
 	+strongswan-mod-mysql \
 	+strongswan-mod-openssl \
-	+TARGET_x86:strongswan-mod-padlock \
 	+strongswan-mod-pem \
 	+strongswan-mod-pgp \
 	+strongswan-mod-pkcs1 \
+	+strongswan-mod-pkcs7 \
 	+strongswan-mod-pkcs8 \
 	+strongswan-mod-pkcs11 \
+	+strongswan-mod-pkcs12 \
 	+strongswan-mod-pubkey \
 	+strongswan-mod-random \
+	+strongswan-mod-rc2 \
 	+strongswan-mod-resolve \
 	+strongswan-mod-revocation \
 	+strongswan-mod-sha1 \
@@ -182,6 +189,7 @@ $(call Package/strongswan/Default)
 	+strongswan-mod-socket-default \
 	+strongswan-mod-sql \
 	+strongswan-mod-sqlite \
+	+strongswan-mod-sshkey \
 	+strongswan-mod-stroke \
 	+strongswan-mod-test-vectors \
 	+strongswan-mod-uci \
@@ -226,11 +234,13 @@ $(call Package/strongswan/Default)
 	+strongswan-mod-pkcs1 \
 	+strongswan-mod-pubkey \
 	+strongswan-mod-random \
+	+strongswan-mod-rc2 \
 	+strongswan-mod-resolve \
 	+strongswan-mod-revocation \
 	+strongswan-mod-sha1 \
 	+strongswan-mod-sha2 \
 	+strongswan-mod-socket-default \
+	+strongswan-mod-sshkey \
 	+strongswan-mod-stroke \
 	+strongswan-mod-updown \
 	+strongswan-mod-x509 \
@@ -291,6 +301,18 @@ $(call Package/strongswan/description/Default)
  This package contains the pki & scepclient utilities.
 endef
 
+define Package/strongswan-libtls
+$(call Package/strongswan/Default)
+  TITLE+= libtls
+  DEPENDS:= +strongswan
+endef
+
+define Package/strongswan-libtls/description
+$(call Package/strongswan/description/Default)
+ This package contains libtls for strongSwan plugins eap-tls, eap-ttls,
+ eap-peap, tnc-tnccs
+endef
+
 define BuildPlugin
   define Package/strongswan-mod-$(1)
     $$(call Package/strongswan/Default)
@@ -298,21 +320,15 @@ define BuildPlugin
     DEPENDS:= +strongswan $(3)
   endef
 
-  strongswan_mod_conf=$(wildcard $(PKG_INSTALL_DIR)/etc/strongswan.d/charon/$(1).conf)
   define Package/strongswan-mod-$(1)/install
 	$(INSTALL_DIR) $$(1)/etc/strongswan.d/charon
-	$(if $(call strongswan_mod_conf,$(1)), \
-		$(INSTALL_DATA) \
-			$(call strongswan_mod_conf,$(1)) \
-			$$(1)/etc/strongswan.d/charon/ \
-	)
+	if [ -f $(PKG_INSTALL_DIR)/etc/strongswan.d/charon/$(1).conf ]; then \
+		$(INSTALL_DATA) $(PKG_INSTALL_DIR)/etc/strongswan.d/charon/$(1).conf $$(1)/etc/strongswan.d/charon/; fi
 	$(INSTALL_DIR) $$(1)/usr/lib/ipsec/plugins
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/ipsec/plugins/libstrongswan-$(1).so \
 		$$(1)/usr/lib/ipsec/plugins/
 	$(call Plugin/$(1)/install,$$(1))
   endef
-
-  Package/strongswan-mod-$(1)/conffiles=$(patsubst $(PKG_INSTALL_DIR)%,%,$(call strongswan_mod_conf,$(1)))
 
   $$(eval $$(call BuildPackage,strongswan-mod-$(1)))
 endef
@@ -342,10 +358,12 @@ endef
 
 define Package/strongswan/install
 	$(INSTALL_DIR) $(1)/etc
-	$(CP) $(PKG_INSTALL_DIR)/etc/strongswan.conf $(1)/etc/
+	$(INSTALL_CONF) $(PKG_INSTALL_DIR)/etc/ipsec.conf $(1)/etc/
+	$(INSTALL_CONF) $(PKG_INSTALL_DIR)/etc/strongswan.conf $(1)/etc/
 	$(INSTALL_DIR) $(1)/usr/lib/ipsec
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/ipsec/{libstrongswan.so.*,libhydra.so.*} $(1)/usr/lib/ipsec/
 	$(INSTALL_CONF) ./files/ipsec.secrets $(1)/etc/
+	$(INSTALL_CONF) ./files/ipsec.user $(1)/etc/
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/ipsec.init $(1)/etc/init.d/ipsec
 endef
@@ -377,6 +395,11 @@ define Package/strongswan-utils/install
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/lib/ipsec/scepclient $(1)/usr/lib/ipsec/
 endef
 
+define Package/strongswan-libtls/install
+	$(INSTALL_DIR) $(1)/usr/lib/ipsec
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/ipsec/libtls.so.* $(1)/usr/lib/ipsec/
+endef
+
 define Plugin/duplicheck/install
 	$(INSTALL_DIR) $(1)/usr/lib/ipsec/plugins
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/ipsec/duplicheck $(1)/usr/lib/ipsec/
@@ -404,8 +427,6 @@ define Plugin/stroke/install
 	$(INSTALL_DIR) $(1)/etc/ipsec.d/private
 	$(INSTALL_DIR) $(1)/etc/ipsec.d/reqs
 
-	$(INSTALL_CONF) $(PKG_INSTALL_DIR)/etc/ipsec.conf $(1)/etc/
-
 	$(INSTALL_DIR) $(1)/usr/lib/ipsec/plugins
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/lib/ipsec/{starter,stroke} $(1)/usr/lib/ipsec/
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/ipsec/plugins/libstrongswan-stroke.so $(1)/usr/lib/ipsec/plugins/
@@ -413,10 +434,9 @@ endef
 
 define Plugin/updown/install
 	$(INSTALL_DIR) $(1)/usr/lib/ipsec/plugins
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/ipsec/{_updown,_updown_espmark} $(1)/usr/lib/ipsec/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/ipsec/_updown $(1)/usr/lib/ipsec/
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/ipsec/plugins/libstrongswan-updown.so $(1)/usr/lib/ipsec/plugins/
 	$(INSTALL_DIR) $(1)/etc
-	$(INSTALL_CONF) ./files/ipsec.user $(1)/etc/
 endef
 
 define Plugin/whitelist/install
@@ -436,12 +456,13 @@ $(eval $(call BuildPackage,strongswan-full))
 $(eval $(call BuildPackage,strongswan-minimal))
 $(eval $(call BuildPackage,strongswan-charon))
 $(eval $(call BuildPackage,strongswan-utils))
+$(eval $(call BuildPackage,strongswan-libtls))
 $(eval $(call BuildPlugin,addrblock,RFC 3779 address block constraint support,))
 $(eval $(call BuildPlugin,aes,AES crypto,))
 $(eval $(call BuildPlugin,af-alg,AF_ALG crypto interface to Linux Crypto API,+kmod-crypto-user))
 $(eval $(call BuildPlugin,agent,SSH agent signing,))
 $(eval $(call BuildPlugin,attr,file based config,))
-$(eval $(call BuildPlugin,attr-sql,SQL based config,+strongswan-mod-sql))
+$(eval $(call BuildPlugin,attr-sql,SQL based config,+strongswan-charon))
 $(eval $(call BuildPlugin,blowfish,Blowfish crypto,))
 $(eval $(call BuildPlugin,ccm,CCM AEAD wrapper crypto,))
 $(eval $(call BuildPlugin,cmac,CMAC crypto,))
@@ -457,6 +478,7 @@ $(eval $(call BuildPlugin,eap-identity,EAP identity helper,))
 $(eval $(call BuildPlugin,eap-md5,EAP MD5 (CHAP) EAP auth,))
 $(eval $(call BuildPlugin,eap-mschapv2,EAP MS-CHAPv2 EAP auth,+strongswan-mod-md4 +strongswan-mod-des))
 $(eval $(call BuildPlugin,eap-radius,EAP RADIUS auth,))
+$(eval $(call BuildPlugin,eap-tls,EAP TLS auth,+strongswan-libtls))
 $(eval $(call BuildPlugin,farp,fake arp respsonses,))
 $(eval $(call BuildPlugin,fips-prf,FIPS PRF crypto,+strongswan-mod-sha1))
 $(eval $(call BuildPlugin,gcm,GCM AEAD wrapper crypto,))
@@ -474,14 +496,16 @@ $(eval $(call BuildPlugin,md4,MD4 crypto,))
 $(eval $(call BuildPlugin,md5,MD5 crypto,))
 $(eval $(call BuildPlugin,mysql,MySQL database interface,+strongswan-mod-sql +PACKAGE_strongswan-mod-mysql:libmysqlclient-r))
 $(eval $(call BuildPlugin,openssl,OpenSSL crypto,+PACKAGE_strongswan-mod-openssl:libopenssl))
-$(eval $(call BuildPlugin,padlock,VIA PadLock crypto,@TARGET_x86))
 $(eval $(call BuildPlugin,pem,PEM decoding,))
 $(eval $(call BuildPlugin,pgp,PGP key decoding,))
 $(eval $(call BuildPlugin,pkcs1,PKCS1 key decoding,))
+$(eval $(call BuildPlugin,pkcs7,PKCS7 key decoding,))
 $(eval $(call BuildPlugin,pkcs8,PKCS8 key decoding,))
 $(eval $(call BuildPlugin,pkcs11,PKCS11 key decoding,))
+$(eval $(call BuildPlugin,pkcs12,PKCS12 key decoding,))
 $(eval $(call BuildPlugin,pubkey,raw public key,))
 $(eval $(call BuildPlugin,random,RNG,))
+$(eval $(call BuildPlugin,rc2,RC2 crypto,))
 $(eval $(call BuildPlugin,resolve,DNS resolver,))
 $(eval $(call BuildPlugin,revocation,X509 CRL/OCSP revocation,))
 $(eval $(call BuildPlugin,sha1,SHA1 crypto,))
@@ -491,6 +515,7 @@ $(eval $(call BuildPlugin,socket-default,default socket implementation for charo
 $(eval $(call BuildPlugin,socket-dynamic,dynamic socket implementation for charon,))
 $(eval $(call BuildPlugin,sql,SQL database interface,))
 $(eval $(call BuildPlugin,sqlite,SQLite database interface,+strongswan-mod-sql +PACKAGE_strongswan-mod-sqlite:libsqlite3))
+$(eval $(call BuildPlugin,sshkey,SSH key decoding,))
 $(eval $(call BuildPlugin,stroke,Stroke,+strongswan-utils))
 $(eval $(call BuildPlugin,test-vectors,crypto test vectors,))
 $(eval $(call BuildPlugin,uci,UCI config interface,+PACKAGE_strongswan-mod-uci:libuci))

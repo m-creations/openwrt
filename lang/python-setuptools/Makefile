@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=python-setuptools
-PKG_VERSION:=7.0
+PKG_VERSION:=18.2
 PKG_RELEASE:=1
 
 PKG_SOURCE:=setuptools-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://pypi.python.org/packages/source/s/setuptools/
-PKG_MD5SUM:=6245d6752e2ef803c365f560f7f2f940
+PKG_MD5SUM:=52b4e48939ef311d7204f8fe940764f4
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/setuptools-$(PKG_VERSION)
 
@@ -27,29 +27,25 @@ define Package/python-setuptools
   TITLE:=Tool for installing Python packages.
   URL:=https://bitbucket.org/pypa/setuptools
   DEPENDS:=+python
+  MAINTAINER:=Alexandru Ardelean <ardeleanalex@gmail.com>
 endef
 
 define Package/python-setuptools/description
   Easily download, build, install, upgrade, and uninstall Python packages
 endef
 
-PYTHONPATH:=$(PKG_INSTALL_DIR)/$(PYTHON_PKG_DIR)
 define Build/Compile
-	$(INSTALL_DIR) $(PYTHONPATH)
 	$(call Build/Compile/PyMod,,\
-		install --prefix="$(PKG_INSTALL_DIR)/usr" \
+		install --root="$(PKG_INSTALL_DIR)" --prefix="/usr" \
+		--single-version-externally-managed \
 	)
 endef
 
-define PyPackage/python-setuptools/filespec
-+|/usr/lib/python$(PYTHON_VERSION)/site-packages
-endef
-
 define Build/InstallDev
-	$(INSTALL_DIR) $(2)/lib/python$(PYTHON_VERSION)/site-packages
+	$(INSTALL_DIR) $(PYTHON_LIB_DIR)
 	$(CP) \
-		$(PKG_INSTALL_DIR)/usr/lib/python$(PYTHON_VERSION)/site-packages/* \
-		$(HOST_PYTHON_LIB_DIR)/site-packages
+		$(PKG_INSTALL_DIR)$(PYTHON_PKG_DIR)/* \
+		$(PYTHON_LIB_DIR)
 endef
 
 define PyPackage/python-setuptools/install

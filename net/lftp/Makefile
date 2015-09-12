@@ -8,11 +8,19 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=lftp
-PKG_VERSION:=4.5.5
+PKG_VERSION:=4.6.2
 PKG_RELEASE:=1
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
-PKG_SOURCE_URL:=http://lftp.yar.ru/ftp \ http://lftp.cybermirror.org \ http://lftp.cybermirror.org/old
-PKG_MD5SUM:=e58fc886e3d7c6d994de5ce51de46087
+PKG_SOURCE_URL:=http://lftp.yar.ru/ftp \
+		http://lftp.yar.ru/ftp/old \
+		http://lftp.cybermirror.org \
+		http://lftp.cybermirror.org/old
+PKG_MD5SUM:=487c064ee1bd732e5f95928e530435a8
+
+
+
+PKG_LICENSE:=GPL-3.0+
+PKG_LICENSE_FILES:=COPYING
 
 include $(INCLUDE_DIR)/uclibc++.mk
 include $(INCLUDE_DIR)/package.mk

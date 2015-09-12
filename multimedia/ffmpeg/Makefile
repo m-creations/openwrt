@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2006-2014 OpenWrt.org
+# Copyright (C) 2006-2015 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=ffmpeg
-PKG_VERSION:=2.4.2
+PKG_VERSION:=2.7.2
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_URL:=http://ffmpeg.org/releases/
-PKG_MD5SUM:=9e6163b09b7b9331b834d80874c2c0ff
+PKG_MD5SUM:=7eb2140bab9f0a8669b65b50c8e4cfb5
 PKG_MAINTAINER:=Ted Hess <thess@kitschensync.net>
 
 PKG_LICENSE:=LGPL-2.1+ GPL-2+ LGPL-3
@@ -108,7 +108,7 @@ FFMPEG_CUSTOM_PARSERS:= \
 	mpegvideo \
 
 FFMPEG_CUSTOM_PROTOCOLS:= \
-	file http pipe rtp tcp udp
+	file http icecast pipe rtp tcp udp
 
 FFMPEG_MINI_DECODERS:= \
 	aac \
@@ -125,7 +125,7 @@ FFMPEG_MINI_DECODERS:= \
 	wmav1 \
 	wmav2 \
 
-FFMPEG_MINI_DEMUXERS := \
+FFMPEG_MINI_DEMUXERS:= \
 	aac \
 	ac3 \
 	avi \
@@ -144,7 +144,7 @@ FFMPEG_MINI_PARSERS:= \
 	mpeg4video \
 	mpegaudio \
 
-FFMPEG_MINI_PROTOCOLS := \
+FFMPEG_MINI_PROTOCOLS:= \
 	file \
 
 FFMPEG_AUDIO_DECODERS:= \
@@ -162,6 +162,7 @@ FFMPEG_AUDIO_DECODERS:= \
 	mp3* \
 	mpc7 \
 	mpc8 \
+	opus \
 	pcm_* \
 	vorbis \
 	wavpack \
@@ -197,12 +198,13 @@ FFMPEG_AUDIO_DEMUXERS:= \
 FFMPEG_AUDIO_PARSERS:= \
 	aac \
 	aac_latm \
-	flac \
 	ac3 \
+	flac \
 	mpegaudio \
+	opus \
 
 FFMPEG_AUDIO_PROTOCOLS:= \
-	file http rtp tcp udp
+	file http icecast rtp tcp udp
 
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(BUILD_VARIANT)/$(PKG_NAME)-$(PKG_VERSION)
@@ -308,7 +310,7 @@ endef
 define Package/libffmpeg-audio-dec
 $(call Package/libffmpeg/Default)
  TITLE+= (audio)
- DEPENDS+= @DEVEL +libopus +libspeex
+ DEPENDS+= @BUILD_PATENTED +libspeex
  VARIANT:=audio-dec
 endef
 
@@ -389,19 +391,17 @@ FFMPEG_CONFIGURE:= \
 	--disable-neon \
 	--disable-inline-asm \
 	--disable-yasm \
+	--disable-mips32r2 \
 	--disable-mipsdspr1 \
 	--disable-mipsdspr2 \
 	--disable-mipsfpu \
 	\
 	--disable-dxva2 \
+	--disable-lzma \
 	--disable-vaapi \
 	--disable-vda \
 	--disable-vdpau \
 	--disable-outdevs
-
-ifeq ($(CONFIG_CPU_TYPE),"mips32")
-	FFMPEG_CONFIGURE +=--disable-mips32r2
-endif
 
 ifeq ($(BUILD_VARIANT),custom)
 
@@ -464,7 +464,6 @@ ifeq ($(BUILD_VARIANT),audio-dec)
 	$(call FFMPEG_ENABLE,demuxer,$(FFMPEG_AUDIO_DEMUXERS)) \
 	$(call FFMPEG_ENABLE,parser,$(FFMPEG_AUDIO_PARSERS)) \
 	$(call FFMPEG_ENABLE,protocol,$(FFMPEG_AUDIO_PROTOCOLS)) \
-	--enable-libopus --enable-decoder=libopus \
 	--enable-libspeex --enable-decoder=libspeex \
 	--disable-decoder=pcm_bluray,pcm_dvd \
 
