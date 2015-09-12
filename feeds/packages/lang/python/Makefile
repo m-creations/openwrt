@@ -168,6 +168,10 @@ define PyPackage/python-base/install
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libpython$(PYTHON_VERSION).so* $(1)/usr/lib/
 endef
 
+HOST_LD_FLAGS+= -L /usr/lib
+
+HOST_CFLAGS+= -I /usr/include
+
 HOST_CONFIGURE_ARGS+= \
 	--without-cxx-main \
 	--without-pymalloc \
