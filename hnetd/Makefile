@@ -7,12 +7,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=hnetd
-PKG_SOURCE_VERSION:=10b22c409f2ecadaaec45e068fd01c74ffe5c772
-PKG_VERSION:=2014-11-25-$(PKG_SOURCE_VERSION)
+PKG_SOURCE_VERSION:=c0b0c31b8fa4fbe47208e49685ccc9976532738a
+PKG_VERSION:=2015-09-08-$(PKG_SOURCE_VERSION)
 PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=git://github.com/sbyx/hnetd.git
+PKG_SOURCE_URL:=https://github.com/sbyx/hnetd.git
 PKG_MAINTAINER:=Steven Barth <cyrus@openwrt.org>
 PKG_LICENSE:=GPL-2.0
 
@@ -28,23 +28,59 @@ CMAKE_OPTIONS += -DL_LEVEL=7
 # OpenWRT target
 CMAKE_OPTIONS += -DBACKEND=openwrt
 
-define Package/hnetd
+ifeq ($(BUILD_VARIANT),openssl)
+CMAKE_OPTIONS += -DDTLS_OPENSSL=1
+endif
+
+define Package/hnetd/Default
   SECTION:=net
   CATEGORY:=Network
-  TITLE:=HNCP Homenet daemon
+  TITLE:=HNCP Homenet daemon - $(2)
   URL:=https://github.com/sbyx/hnetd
-  DEPENDS:=+odhcpd +odhcp6c +netifd
+  DEPENDS:=+odhcpd +odhcp6c +netifd $(3)
   DEPENDS+=+@IPV6
+  VARIANT:=$1
 endef
+
+Package/hnetd-nossl=$(call Package/hnetd/Default,nossl,no authentication)
+Package/hnetd-openssl=$(call Package/hnetd/Default,openssl,authentication via OpenSSL,+libopenssl)
 
 define Package/hnet-full
   SECTION:=net
   CATEGORY:=Network
   TITLE:=HNCP Homenet metapackage
   URL:=https://github.com/sbyx/hnetd
-  DEPENDS:=+hnetd +luci-app-hnet
+  DEPENDS:=+hnetd-nossl +luci-app-hnet +ip
   # Routing
-  DEPENDS+=+babels
+  DEPENDS+=+babeld
+  # Service discovery
+  DEPENDS+=+ohybridproxy
+  # Distributed PCP support
+  DEPENDS+=+miniupnpd +minimalist-pcproxy
+endef
+
+define Package/hnet-full-secure
+  SECTION:=net
+  CATEGORY:=Network
+  TITLE:=HNCP Homenet metapackage (w/ SSL)
+  URL:=https://github.com/sbyx/hnetd
+  DEPENDS:=+hnetd-openssl +luci-app-hnet +ip
+  # Routing
+  DEPENDS+=+babeld
+  # Service discovery
+  DEPENDS+=+ohybridproxy
+  # Distributed PCP support
+  DEPENDS+=+miniupnpd +minimalist-pcproxy
+endef
+
+define Package/hnet-full-l2tp
+  SECTION:=net
+  CATEGORY:=Network
+  TITLE:=HNCP Homenet metapackage (w/ L2TP)
+  URL:=https://github.com/sbyx/hnetd
+  DEPENDS:=+hnetd-nossl +luci-app-hnet +ip-full +kmod-l2tp-eth
+  # Routing
+  DEPENDS+=+babeld
   # Service discovery
   DEPENDS+=+ohybridproxy
   # Distributed PCP support
@@ -56,22 +92,25 @@ define Package/luci-app-hnet
   CATEGORY:=LuCI
   SUBMENU:=3. Applications
   TITLE:=HNCP Homenet configuration and visualization
-  DEPENDS:=+hnetd
+#  DEPENDS:=+hnetd
+# TBD - how to express dependency on 'some' hnetd?
 endef
 
-define Package/hnetd/description
+define Package/hnetd-$(BUILD_VARIANT)/description
 This package provides a daemon which implementats distributed prefix assignment
 and service discovery for a home network consisting of multiple routers
 connected to multiple service providers. It provides a netifd protocol "hnet"
 for use in /etc/config/network.
 endef
 
-define Package/hnetd/install
+define Package/hnetd-$(BUILD_VARIANT)/install
 	$(INSTALL_DIR) $(1)/usr/sbin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/hnetd $(1)/usr/sbin/
 	$(INSTALL_DIR) $(1)/lib/netifd/proto
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/openwrt/hnet.sh $(1)/lib/netifd/proto
 	ln -s hnetd $(1)/usr/sbin/hnet-ifresolve
+	ln -s hnetd $(1)/usr/sbin/hnet-trust
+	ln -s hnetd $(1)/usr/sbin/hnet-dump
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/hnetd.init $(1)/etc/init.d/hnetd
 	$(INSTALL_DIR) $(1)/etc/config
@@ -81,10 +120,21 @@ define Package/hnetd/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/generic/hnetd-routing $(1)/usr/sbin/hnetd-routing
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) ./files/hnetd.defaults $(1)/etc/uci-defaults/x-hnetd.defaults
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/generic/multicast.script $(1)/usr/sbin/hnet-multicast
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/openwrt/autowifi.script $(1)/usr/sbin/autowifi
 endef
 
 define Package/hnet-full/install
 	true
+endef
+
+define Package/hnet-full-secure/install
+	true
+endef
+
+define Package/hnet-full-l2tp/install
+	$(INSTALL_DIR) $(1)/usr/sbin/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/generic/tunnel.script $(1)/usr/sbin/hnetd-tunnel
 endef
 
 define Package/luci-app-hnet/install
@@ -94,7 +144,7 @@ define Package/luci-app-hnet/install
 	$(CP) -R $(PKG_BUILD_DIR)/openwrt/luci/htdocs/* $(1)/www/
 endef
 
-define Package/hnetd/postinst
+define Package/hnetd-$(BUILD_VARIANT)/postinst
 #!/bin/sh
 [ -n "$${IPKG_INSTROOT}" ] || {
 	(. /etc/uci-defaults/x-hnetd.defaults) && rm -f /etc/uci-defaults/x-hnetd.defaults
@@ -104,6 +154,9 @@ define Package/hnetd/postinst
 }
 endef
 
-$(eval $(call BuildPackage,hnetd))
+$(eval $(call BuildPackage,hnetd-nossl))
+$(eval $(call BuildPackage,hnetd-openssl))
 $(eval $(call BuildPackage,hnet-full))
+$(eval $(call BuildPackage,hnet-full-secure))
+$(eval $(call BuildPackage,hnet-full-l2tp))
 $(eval $(call BuildPackage,luci-app-hnet))

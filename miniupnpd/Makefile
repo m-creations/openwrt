@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=miniupnpd
-PKG_VERSION:=1.9
+PKG_VERSION:=1.9.20150609
 PKG_RELEASE:=1
 
 PKG_SOURCE_URL:=http://miniupnp.free.fr/files
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_MD5SUM:=9151502f84f130b0ef1245ac938c33f9
+PKG_MD5SUM:=01ee891286683891240a29b7272d790e
 
 PKG_MAINTAINER:=Markus Stenberg <fingon@iki.fi>
 PKG_LICENSE:=BSD-3-Clause
@@ -23,7 +23,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/miniupnpd
   SECTION:=net
   CATEGORY:=Network
-  DEPENDS:=+iptables +libip4tc +IPV6:libip6tc +IPV6:ip6tables +libnfnetlink
+  DEPENDS:=+iptables +libip4tc +IPV6:libip6tc +IPV6:ip6tables
   TITLE:=Lightweight UPnP IGD, NAT-PMP & PCP daemon
   SUBMENU:=Firewall
   URL:=http://miniupnp.free.fr/
@@ -46,13 +46,13 @@ endef
 
 define Build/Prepare
 	$(call Build/Prepare/Default)
-	echo "OpenWrt/$(OPENWRTVERSION)" | tr \(\)\  _ >$(PKG_BUILD_DIR)/os.openwrt
+	echo "OpenWrt" | tr \(\)\  _ >$(PKG_BUILD_DIR)/os.openwrt
 endef
 
 MAKE_FLAGS += \
 	TEST=0 \
 	LIBS="" \
-	CC="$(TARGET_CC) -DIPTABLES_143 -lnfnetlink -lip4tc $(if $(CONFIG_IPV6),-lip6tc)" \
+	CC="$(TARGET_CC) -DIPTABLES_143 -lip4tc $(if $(CONFIG_IPV6),-lip6tc)" \
 	CONFIG_OPTIONS="$(if $(CONFIG_IPV6),--ipv6) --leasefile" \
 	-f Makefile.linux \
 	miniupnpd
