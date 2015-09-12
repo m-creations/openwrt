@@ -51,6 +51,7 @@ Package/vsftpd-tls/conffiles=$(Package/vsftpd/conffiles)
 
 ifeq ($(BUILD_VARIANT),notls)
  define Build/Compile
+	$(SED) 's/-lcrypt -lnsl/-lcrypt/' $(PKG_BUILD_DIR)/Makefile
 	$(MAKE) -C $(PKG_BUILD_DIR) \
 		CC="$(TARGET_CC)" \
 		CFLAGS="$(TARGET_CFLAGS)" \
