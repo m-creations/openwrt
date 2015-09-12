@@ -1,6 +1,6 @@
---- asterisk-11.4.0/res/Makefile	2013-02-04 20:50:52.000000000 +0100
-+++ asterisk11-new/res/Makefile	2013-06-02 13:51:22.269684111 +0200
-@@ -75,7 +75,7 @@ dist-clean::
+--- a/res/Makefile
++++ b/res/Makefile
+@@ -78,7 +78,7 @@ distclean::
  	rm -f pjproject/build.mak
  
  pjproject/build.mak: pjproject/aconfigure
