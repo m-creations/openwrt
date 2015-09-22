@@ -140,6 +140,7 @@ define Package/openldap-server/install
 	$(INSTALL_DIR) $(1)/usr/sbin
 	# XXX: OpenLDAP installs slapd into libexecdir, not sbindir:
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/lib/slapd $(1)/usr/sbin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/* $(1)/usr/sbin/
 	# XXX: switch default backend to ldif, since bdb is disabled
 	$(SED) 's|^\(database\)\([ \t]\+\)bdb|\1\2ldif|g' \
 	    -e 's|^\(index\)|#\1|g' \
