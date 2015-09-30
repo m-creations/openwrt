@@ -19,5 +19,6 @@ $(eval $(call PyBasePackage,python-codecs, \
 	/usr/lib/python$(PYTHON_VERSION)/lib-dynload/_codecs_jp.so \
 	/usr/lib/python$(PYTHON_VERSION)/lib-dynload/_codecs_kr.so \
 	/usr/lib/python$(PYTHON_VERSION)/lib-dynload/_codecs_tw.so \
-	/usr/lib/python$(PYTHON_VERSION)/lib-dynload/unicodedata.so \
+	/usr/lib/python$(PYTHON_VERSION)/lib-dynload/unicodedata.so, \
+	/usr/lib/python$(PYTHON_VERSION)/encodings/bz2_codec.py \
 ))

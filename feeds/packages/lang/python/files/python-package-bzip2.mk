@@ -14,6 +14,5 @@ endef
 
 $(eval $(call PyBasePackage,python-bzip2, \
 	/usr/lib/python$(PYTHON_VERSION)/encodings/bz2_codec.py \
-	/usr/lib/python$(PYTHON_VERSION)/lib-dynload/_elementtree.so \
 	/usr/lib/python$(PYTHON_VERSION)/lib-dynload/bz2.so \
 ))
