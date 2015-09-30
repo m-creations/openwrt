@@ -93,6 +93,7 @@ define PyBasePackage
   PYTHON_LIB_FILES_DEL+=$(2)
   define PyPackage/$(1)/filespec
     $(subst $(space),$(newline),$(foreach lib_file,$(2),+|$(lib_file)))
+    $(subst $(space),$(newline),$(foreach lib_file,$(3),-|$(lib_file)))
   endef
 endef
 
