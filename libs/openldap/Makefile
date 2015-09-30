@@ -95,11 +95,12 @@ CONFIGURE_ARGS += \
 	--with-threads \
 	--with-tls \
 	--with-yielding_select="yes" \
-	--without-threads \
 	--enable-null \
 	--disable-bdb \
 	--disable-hdb \
-	--disable-monitor \
+	--enable-monitor \
+	--enable-overlays \
+	--enable-crypt \
 	--disable-relay
 
 CONFIGURE_VARS += \
