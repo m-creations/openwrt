@@ -15,11 +15,11 @@ error() {
 start() {
 	local datadir=$(sed -n -e "s/^[[:space:]]*datadir[[:space:]]*=[[:space:]\"']*\([^[:space:]\"']*\)[[:space:]\"']*/\1/p" /etc/mariadb/my.cnf)
 	if [ ! -d "$datadir" ]; then
-		error "Error: datadir '$datadir' in /etc/my.cnf doesn't exist"
+		error "Error: datadir '$datadir' in /etc/mariadb/my.cnf doesn't exist"
 		return 1
 	fi
 	if [ ! -f "$datadir/mysql/tables_priv.MYD" ]; then
-		error "Error: I didn't detect a privileges table, you might need to run mysql_install_db --force to initialize the system tables"
+		error "Error: I didn't detect a privileges table, you might need to run mysql_install_db --force --basedir=/usr to initialize the system tables"
 		return 1
 	fi
 	service_start /usr/bin/mariadb

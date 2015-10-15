@@ -7,21 +7,21 @@
 
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=mariadb-galera
+PKG_NAME:=mariadb
 PKG_VERSION:=10.0.21
 PKG_RELEASE:=1
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://downloads.mariadb.org/interstitial/$(PKG_NAME)-$(PKG_VERSION)/source
-PKG_BUILD_DIR:=$(BUILD_DIR)/mariadb-$(PKG_VERSION)
-HOST_BUILD_DIR:=$(BUILD_DIR_HOST)/mariadb-$(PKG_VERSION)
+PKG_SOURCE:=$(PKG_NAME)-galera-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=https://downloads.mariadb.org/interstitial/$(PKG_NAME)-galera-$(PKG_VERSION)/source
+# PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
+HOST_BUILD_DIR:=$(BUILD_DIR_HOST)/$(PKG_NAME)-$(PKG_VERSION)
 
 PKG_MD5SUM:=2dfbc5793bfe025039c0b4dd6e314f5d
 PKG_MAINTAINER:=Kambiz Darabi <darabi@m-creations.net>
 PKG_LICENSE:=GPL-2.0
 
-PKG_BUILD_DEPENDS += mariadb-galera/host libncurses libreadline
-HOST_BUILD_DEPENDS += mariadb-galera/host
+PKG_BUILD_DEPENDS += mariadb/host libncurses libreadline
+HOST_BUILD_DEPENDS += mariadb/host
 
 PKG_BUILD_PARALLEL:=1
 PKG_USE_MIPS16:=0
@@ -108,10 +108,10 @@ define Build/InstallDev
 endef
 
 define Package/libmariadb/install
-	$(INSTALL_DIR) $(1)/usr/lib $(1)/usr/lib/mariadb
+	$(INSTALL_DIR) $(1)/usr/lib $(1)/usr/lib/mysql
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libmysqlclient*.so.* $(1)/usr/lib/
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/mysql_clear_password.so $(1)/usr/lib/mariadb/
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/dialog.so $(1)/usr/lib/mariadb/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/mysql_clear_password.so $(1)/usr/lib/mysql/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/dialog.so $(1)/usr/lib/mysql/
 endef
 
 define Package/mariadb-client/install
@@ -137,9 +137,12 @@ define Package/mariadb-client-extra/install
 endef
 
 define Package/mariadb-server/install
-	$(INSTALL_DIR) $(1)/usr/bin $(1)/usr/share/mariadb $(1)/usr/lib/mariadb $(1)/etc/mariadb $(1)/etc/mariadb/conf.d
+	$(INSTALL_DIR) $(1)/usr/bin $(1)/usr/share/mariadb $(1)/usr/lib/mariadb $(1)/etc/mariadb $(1)/etc/mariadb/conf.d $(1)/etc/init.d
 	$(CP) $(PKG_INSTALL_DIR)/usr/bin/mysqld $(1)/usr/bin/mariadb
 	$(INSTALL_BIN) files/mariadb.init $(1)/etc/init.d/mariadb
+	# these two need perl and should go into their own package which depends on perl + dbi + ?
+	# $(INSTALL_BIN) files/mysqlreport $(1)/usr/bin/
+	# $(INSTALL_BIN) files/innotop $(1)/usr/bin/
 	$(INSTALL_CONF) files/my.cnf $(1)/etc/mariadb/
 	$(INSTALL_CONF) files/conf.d/* $(1)/etc/mariadb/conf.d/
 	$(CP) $(PKG_INSTALL_DIR)/usr/share/* $(1)/usr/share/mariadb/
@@ -198,8 +201,9 @@ endef
 # $(PKG_BUILD_DIR)/debian/additions/mysqlreport
 # $(PKG_BUILD_DIR)/debian/additions/innotop
 
-define Package/mariadb-galera/conffiles
-/etc/mariadb-galera.cnf
+define Package/mariadb/conffiles
+/etc/mariadb/my.cnf
+/etc/mariadb/conf.d
 endef
 
 $(eval $(call HostBuild))
