@@ -14,7 +14,7 @@ PKG_RELEASE:=1
 PKG_SOURCE:=$(PKG_NAME)-galera-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://downloads.mariadb.org/interstitial/$(PKG_NAME)-galera-$(PKG_VERSION)/source
 # PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
-HOST_BUILD_DIR:=$(BUILD_DIR_HOST)/$(PKG_NAME)-$(PKG_VERSION)
+# HOST_BUILD_DIR:=$(BUILD_DIR_HOST)/$(PKG_NAME)-$(PKG_VERSION)
 
 PKG_MD5SUM:=2dfbc5793bfe025039c0b4dd6e314f5d
 PKG_MAINTAINER:=Kambiz Darabi <darabi@m-creations.net>
@@ -137,31 +137,31 @@ define Package/mariadb-client-extra/install
 endef
 
 define Package/mariadb-server/install
-	$(INSTALL_DIR) $(1)/usr/bin $(1)/usr/share/mariadb $(1)/usr/lib/mariadb $(1)/etc/mariadb $(1)/etc/mariadb/conf.d $(1)/etc/init.d
-	$(CP) $(PKG_INSTALL_DIR)/usr/bin/mysqld $(1)/usr/bin/mariadb
+	$(INSTALL_DIR) $(1)/usr/bin $(1)/usr/share/mysql $(1)/usr/lib/mysql $(1)/etc/mysql $(1)/etc/mysql/conf.d $(1)/etc/init.d
+	$(CP) $(PKG_INSTALL_DIR)/usr/bin/mysqld $(1)/usr/bin/mysqld
 	$(INSTALL_BIN) files/mariadb.init $(1)/etc/init.d/mariadb
 	# these two need perl and should go into their own package which depends on perl + dbi + ?
 	# $(INSTALL_BIN) files/mysqlreport $(1)/usr/bin/
 	# $(INSTALL_BIN) files/innotop $(1)/usr/bin/
-	$(INSTALL_CONF) files/my.cnf $(1)/etc/mariadb/
-	$(INSTALL_CONF) files/conf.d/* $(1)/etc/mariadb/conf.d/
-	$(CP) $(PKG_INSTALL_DIR)/usr/share/* $(1)/usr/share/mariadb/
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/auth_pam.so $(1)/usr/lib/mariadb/
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/auth_socket.so $(1)/usr/lib/mariadb/
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/ha_mroonga.so $(1)/usr/lib/mariadb/
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/ha_sequence.so $(1)/usr/lib/mariadb/
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/ha_sphinx.so $(1)/usr/lib/mariadb/
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/ha_spider.so $(1)/usr/lib/mariadb/
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/ha_innodb.so $(1)/usr/lib/mariadb/
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/handlersocket.so $(1)/usr/lib/mariadb/
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/locales.so $(1)/usr/lib/mariadb/
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/metadata_lock_info.so $(1)/usr/lib/mariadb/
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/query_cache_info.so $(1)/usr/lib/mariadb/
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/query_response_time.so $(1)/usr/lib/mariadb/
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/semisync_master.so $(1)/usr/lib/mariadb/
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/semisync_slave.so $(1)/usr/lib/mariadb/
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/sql_errlog.so $(1)/usr/lib/mariadb/
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/server_audit.so $(1)/usr/lib/mariadb/
+	$(INSTALL_CONF) files/my.cnf $(1)/etc/mysql/
+	$(INSTALL_CONF) files/conf.d/* $(1)/etc/mysql/conf.d/
+	$(CP) $(PKG_INSTALL_DIR)/usr/share/* $(1)/usr/share/mysql/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/auth_pam.so $(1)/usr/lib/mysql/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/auth_socket.so $(1)/usr/lib/mysql/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/ha_mroonga.so $(1)/usr/lib/mysql/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/ha_sequence.so $(1)/usr/lib/mysql/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/ha_sphinx.so $(1)/usr/lib/mysql/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/ha_spider.so $(1)/usr/lib/mysql/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/ha_innodb.so $(1)/usr/lib/mysql/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/handlersocket.so $(1)/usr/lib/mysql/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/locales.so $(1)/usr/lib/mysql/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/metadata_lock_info.so $(1)/usr/lib/mysql/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/query_cache_info.so $(1)/usr/lib/mysql/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/query_response_time.so $(1)/usr/lib/mysql/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/semisync_master.so $(1)/usr/lib/mysql/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/semisync_slave.so $(1)/usr/lib/mysql/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/sql_errlog.so $(1)/usr/lib/mysql/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/plugin/server_audit.so $(1)/usr/lib/mysql/
 	$(CP) $(PKG_INSTALL_DIR)/usr/bin/msql2mysql $(1)/usr/bin/
 	$(CP) $(PKG_INSTALL_DIR)/usr/bin/my_print_defaults $(1)/usr/bin/
 	$(CP) $(PKG_INSTALL_DIR)/usr/bin/myisamchk $(1)/usr/bin/
@@ -202,8 +202,8 @@ endef
 # $(PKG_BUILD_DIR)/debian/additions/innotop
 
 define Package/mariadb/conffiles
-/etc/mariadb/my.cnf
-/etc/mariadb/conf.d
+/etc/mysql/my.cnf
+/etc/mysql/conf.d
 endef
 
 $(eval $(call HostBuild))
