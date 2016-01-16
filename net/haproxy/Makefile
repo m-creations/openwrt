@@ -50,9 +50,16 @@ define Package/haproxy/Default/description
  Open source Reliable, High Performance TCP/HTTP Load Balancer.
 endef
 
-define Package/haproxy
+define Package/libhaproxy
+  SECTION:=libs
+  CATEGORY:=Libraries
   DEPENDS+= +libpcre +libltdl +zlib +libpthread +libopenssl +libncursesw +libreadline +@OPENSSL_WITH_DEPRECATED +@OPENSSL_WITH_EC +@OPENSSL_WITH_EC2M  +@OPENSSL_WITH_DTLS +@OPENSSL_WITH_COMPRESSION +@OPENSSL_WITH_NPN  +@OPENSSL_WITH_PSK +@OPENSSL_WITH_SRP +@OPENSSL_ENGINE_DIGEST +@OPENSSL_ENGINE_CRYPTO
+  TITLE:=HAProxy shared library
+  URL:=http://haproxy.org/
+endef
 
+define Package/haproxy
+  DEPENDS+= +libhaproxy
   TITLE+= (with SSL support)
   VARIANT:=ssl
 $(call Package/haproxy/Default)
@@ -75,7 +82,7 @@ endef
 define Package/haproxy-nossl
   TITLE+= (without SSL support)
   VARIANT:=nossl
-  DEPENDS+= +libpcre +libltdl +zlib +libpthread
+  DEPENDS+= +libhaproxy
   TITLE+= (without SSL support)
 $(call Package/haproxy/Default)
 endef
@@ -127,6 +134,7 @@ define Build/Compile
 		VERSION="$(PKG_VERSION)-patch$(PKG_RELEASE)" \
 		$(ADDON)
 		CFLAGS="$(TARGET_CFLAGS) -fno-align-jumps -fno-align-functions -fno-align-labels -fno-align-loops -pipe -fomit-frame-pointer -fhonour-copts" \
+		CFLAGS="-fPIC $(CFLAGS)" \
 		LD="$(TARGET_LD)" \
 		LDFLAGS="$(TARGET_LDFLAGS) -lcurses -lreadline" \
 		GNOREGIT=1
@@ -159,6 +167,10 @@ endef
 
 Package/haproxy-nossl/install = $(Package/haproxy/install)
 
+define Package/libhaproxy/install
+	$(INSTALL_DIR) $(1)/usr/lib
+	$(CP) $(PKG_INSTALL_DIR)/usr/local/lib/libhaproxy* $(1)/usr/lib/
+endef
 
 define Package/halog
 	MENU:=1
@@ -177,6 +189,7 @@ define Package/halog/install
 endef
 
 $(eval $(call Download,lua533))
+$(eval $(call BuildPackage,libhaproxy))
 $(eval $(call BuildPackage,haproxy))
 $(eval $(call BuildPackage,halog))
 $(eval $(call BuildPackage,haproxy-nossl))

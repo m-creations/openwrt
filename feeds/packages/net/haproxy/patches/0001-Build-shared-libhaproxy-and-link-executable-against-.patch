@@ -1,0 +1,149 @@
+From 6a102f16ff5983dd87fd51fac92dcd38662795c4 Mon Sep 17 00:00:00 2001
+From: Kambiz Darabi <darabi@m-creations.net>
+Date: Sat, 16 Jan 2016 10:46:22 +0100
+Subject: [PATCH 01/10] Build shared libhaproxy and link executable against it
+
+---
+ Makefile                  | 13 ++++++++++---
+ include/common/compiler.h |  4 ++++
+ src/haproxy.c             |  2 +-
+ src/main.c                | 41 +++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 56 insertions(+), 4 deletions(-)
+ create mode 100644 src/main.c
+
+diff --git a/Makefile b/Makefile
+index d15be04..59c85b2 100644
+--- a/Makefile
++++ b/Makefile
+@@ -91,6 +91,7 @@
+ DESTDIR =
+ PREFIX = /usr/local
+ SBINDIR = $(PREFIX)/sbin
++LIBDIR = $(PREFIX)/lib
+ MANDIR = $(PREFIX)/share/man
+ DOCDIR = $(PREFIX)/doc/haproxy
+ 
+@@ -126,7 +127,7 @@ DEBUG_CFLAGS = -g
+ #### Compiler-specific flags that may be used to disable some negative over-
+ # optimization or to silence some warnings. -fno-strict-aliasing is needed with
+ # gcc >= 4.4.
+-SPEC_CFLAGS = -fno-strict-aliasing -Wdeclaration-after-statement
++SPEC_CFLAGS = -fPIC -fno-strict-aliasing -Wdeclaration-after-statement
+ 
+ #### Memory usage tuning
+ # If small memory footprint is required, you can reduce the buffer size. There
+@@ -731,7 +732,7 @@ else
+ all: haproxy $(EXTRA)
+ endif
+ 
+-OBJS = src/haproxy.o src/base64.o src/protocol.o \
++OBJS = src/main.o src/haproxy.o src/base64.o src/protocol.o \
+        src/uri_auth.o src/standard.o src/buffer.o src/log.o src/task.o \
+        src/chunk.o src/channel.o src/listener.o src/lru.o src/xxhash.o \
+        src/time.o src/fd.o src/pipe.o src/regex.o src/cfgparse.o src/server.o \
+@@ -760,7 +761,9 @@ WRAPPER_OBJS = src/haproxy-systemd-wrapper.o
+ LIB_EBTREE = $(EBTREE_DIR)/libebtree.a
+ 
+ haproxy: $(OBJS) $(OPTIONS_OBJS) $(EBTREE_OBJS)
+-	$(LD) $(LDFLAGS) -o $@ $^ $(LDOPTS)
++	$(LD) -shared -Wl,-soname,libhaproxy.so.1 -L. $(LDFLAGS) -o libhaproxy.so.$(VERSION) $^ $(LDOPTS)
++	ln -s libhaproxy.so.$(VERSION) libhaproxy.so
++	$(LD) $(LDFLAGS) -L. -o $@ src/main.o -lhaproxy $(LDOPTS)
+ 
+ haproxy-systemd-wrapper: $(WRAPPER_OBJS)
+ 	$(LD) $(LDFLAGS) -o $@ $^ $(LDOPTS)
+@@ -810,6 +813,9 @@ install-doc:
+ 
+ install-bin: haproxy $(EXTRA)
+ 	install -d "$(DESTDIR)$(SBINDIR)"
++	install -d "$(DESTDIR)$(LIBDIR)"
++	install libhaproxy.so.$(VERSION) "$(DESTDIR)$(LIBDIR)"
++	ln -rs "$(DESTDIR)$(LIBDIR)/libhaproxy.so.$(VERSION)" "$(DESTDIR)$(LIBDIR)/libhaproxy.so.1"
+ 	install haproxy $(EXTRA) "$(DESTDIR)$(SBINDIR)"
+ 
+ install: install-bin install-man install-doc
+@@ -829,6 +835,7 @@ clean:
+ 	rm -f haproxy-$(VERSION).tar.gz haproxy-$(VERSION)$(SUBVERS).tar.gz
+ 	rm -f haproxy-$(VERSION) haproxy-$(VERSION)$(SUBVERS) nohup.out gmon.out
+ 	rm -f haproxy-systemd-wrapper
++	rm -f libhaproxy*
+ 
+ tags:
+ 	find src include \( -name '*.c' -o -name '*.h' \) -print0 | \
+diff --git a/include/common/compiler.h b/include/common/compiler.h
+index 001b893..1d8ed1c 100644
+--- a/include/common/compiler.h
++++ b/include/common/compiler.h
+@@ -103,5 +103,9 @@
+ #endif
+ #endif
+ 
++/*
++ * Declaration for the original main() function
++ */
++int haproxy_main(int argc, char **argv);
+ 
+ #endif /* _COMMON_COMPILER_H */
+diff --git a/src/haproxy.c b/src/haproxy.c
+index 4299328..45c323d 100644
+--- a/src/haproxy.c
++++ b/src/haproxy.c
+@@ -1629,7 +1629,7 @@ static struct task *manage_global_listener_queue(struct task *t)
+ 	return t;
+ }
+ 
+-int main(int argc, char **argv)
++int haproxy_main(int argc, char **argv)
+ {
+ 	int err, retry;
+ 	struct rlimit limit;
+diff --git a/src/main.c b/src/main.c
+new file mode 100644
+index 0000000..7de0b69
+--- /dev/null
++++ b/src/main.c
+@@ -0,0 +1,41 @@
++/*
++ * HA-Proxy : High Availability-enabled HTTP/TCP proxy
++ * Copyright 2000-2015  Willy Tarreau <w@1wt.eu>.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version
++ * 2 of the License, or (at your option) any later version.
++ *
++ * Please refer to RFC2068 or RFC2616 for informations about HTTP protocol, and
++ * RFC2965 for informations about cookies usage. More generally, the IETF HTTP
++ * Working Group's web site should be consulted for protocol related changes :
++ *
++ *     http://ftp.ics.uci.edu/pub/ietf/http/
++ *
++ * Pending bugs (may be not fixed because never reproduced) :
++ *   - solaris only : sometimes, an HTTP proxy with only a dispatch address causes
++ *     the proxy to terminate (no core) if the client breaks the connection during
++ *     the response. Seen on 1.1.8pre4, but never reproduced. May not be related to
++ *     the snprintf() bug since requests were simple (GET / HTTP/1.0), but may be
++ *     related to missing setsid() (fixed in 1.1.15)
++ *   - a proxy with an invalid config will prevent the startup even if disabled.
++ *
++ * ChangeLog has moved to the CHANGELOG file.
++ *
++ */
++
++#include <common/compiler.h>
++
++int main(int argc, char **argv)
++{
++	haproxy_main(argc, argv);
++}
++
++
++/*
++ * Local variables:
++ *  c-indent-level: 8
++ *  c-basic-offset: 8
++ * End:
++ */
+-- 
+1.9.1
+
