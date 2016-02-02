@@ -70,7 +70,9 @@ git remote add feed-management https://github.com/openwrt-management/packages.gi
 git subtree add --squash --prefix=feeds/management feed-management master
 ```
 
-With these commands the feeds are updated to the master of those repos:
+With these commands the feeds are updated to the master of those
+repos, and all new packages are 'installed' which means that they now
+become visible (but not selected due to `-d n`) in `make menuconfig`:
 
 ```
 for f in packages luci routing telephony management ; do
@@ -78,7 +80,7 @@ for f in packages luci routing telephony management ; do
 done
 
 ./scripts/feeds update -i
-./scripts/feeds install -a
+./scripts/feeds install -a -d n
 ```
 
 If it becomes necessary to patch the feed repos, you can fork the
