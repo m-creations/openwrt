@@ -33,7 +33,7 @@ define Package/perl-net-ldap
 endef
 
 define Build/Configure
-	$(call perlmod/Configure,,)
+	$(call perlmod/Configure,,PERL_AUTOINSTALL="--skipdeps")
 endef
 
 define Build/Compile
