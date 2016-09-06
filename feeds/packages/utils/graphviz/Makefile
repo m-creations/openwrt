@@ -75,6 +75,8 @@ endef
 
 define Package/graphviz/install
 	$(INSTALL_DIR) $(1)/usr/lib
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(CP) $(PKG_INSTALL_DIR)/usr/bin/dot $(1)/usr/bin/
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/* $(1)/usr/lib/
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/graphviz/* $(1)/usr/lib/graphviz/
 endef
