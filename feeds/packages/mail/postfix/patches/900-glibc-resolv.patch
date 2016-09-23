@@ -1,0 +1,11 @@
+--- a/makedefs
++++ b/makedefs
+@@ -530,7 +530,7 @@ EOF
+ 			}
+ 		    done
+ 		done
+-		SYSLIBS="$SYSLIBS -ldl"
++		SYSLIBS="$SYSLIBS -ldl -lresolv"
+ 		: ${SHLIB_SUFFIX=.so}
+ 		: ${SHLIB_CFLAGS=-fPIC}
+ 		: ${SHLIB_LD="${CC-gcc} -shared"' -Wl,-soname,${LIB}'}
