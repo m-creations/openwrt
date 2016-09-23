@@ -1,0 +1,58 @@
+--- a/initd/init.c
++++ b/initd/init.c
+@@ -72,7 +72,7 @@ main(int argc, char **argv)
+ {
+ 	pid_t pid;
+ 
+-	ulog_open(ULOG_KMSG, LOG_DAEMON, "init");
++	ulog_open(ULOG_KMSG|ULOG_STDIO, LOG_DAEMON, "init");
+ 
+ 	sigaction(SIGTERM, &sa_shutdown, NULL);
+ 	sigaction(SIGUSR1, &sa_shutdown, NULL);
+--- a/procd.c
++++ b/procd.c
+@@ -43,7 +43,7 @@ int main(int argc, char **argv)
+ 	int ch;
+ 	char *dbglvl = getenv("DBGLVL");
+ 
+-	ulog_open(ULOG_KMSG, LOG_DAEMON, "procd");
++	ulog_open(ULOG_KMSG|ULOG_STDIO, LOG_DAEMON, "procd");
+ 
+ 	if (dbglvl) {
+ 		debug = atoi(dbglvl);
+--- a/state.c
++++ b/state.c
+@@ -124,11 +124,11 @@ static void state_enter(void)
+ 		procd_inittab_run("sysinit");
+ 
+ 		// switch to syslog log channel
+-		ulog_open(ULOG_SYSLOG, LOG_DAEMON, "procd");
++		ulog_open(ULOG_SYSLOG|ULOG_STDIO, LOG_DAEMON, "procd");
+ 		break;
+ 
+ 	case STATE_RUNNING:
+-		LOG("- init complete -\n");
++		LOG("- init complete darabi -\n");
+ 		break;
+ 
+ 	case STATE_SHUTDOWN:
+--- a/service/instance.c
++++ b/service/instance.c
+@@ -394,7 +394,7 @@ instance_stdio(struct ustream *s, int pr
+ 
+ 	arg0 = basename(blobmsg_data(blobmsg_data(in->command)));
+ 	snprintf(ident, sizeof(ident), "%s[%d]", arg0, in->proc.pid);
+-	ulog_open(ULOG_SYSLOG, LOG_DAEMON, ident);
++	ulog_open(ULOG_SYSLOG|ULOG_STDIO, LOG_DAEMON, ident);
+ 
+ 	do {
+ 		str = ustream_get_read_buf(s, NULL);
+@@ -412,7 +412,7 @@ instance_stdio(struct ustream *s, int pr
+ 		ustream_consume(s, len);
+ 	} while (1);
+ 
+-	ulog_open(ULOG_SYSLOG, LOG_DAEMON, "procd");
++	ulog_open(ULOG_SYSLOG|ULOG_STDIO, LOG_DAEMON, "procd");
+ }
+ 
+ static void
