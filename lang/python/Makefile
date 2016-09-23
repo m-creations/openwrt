@@ -82,6 +82,22 @@ define Package/python-light/description
   into separate packages.
 endef
 
+define Package/python-headers
+$(call Package/python/Default)
+  TITLE:=Python $(PYTHON_VERSION) header files
+endef
+
+define Package/python-headers/description
+  This package is essentially the python-base package plus
+  the header files which are put in /usr/include/python$(PYTHON_VERSION).
+endef
+
+# Define newline here, since it's not defined in OpenWrt
+define newline
+
+
+endef
+
 PYTHON_LIB_FILES_DEL:=
 PYTHON_PACKAGES:=
 PYTHON_PACKAGES_DEPENDS:=
@@ -226,6 +242,22 @@ define PyPackage/python-base/install
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libpython$(PYTHON_VERSION).so* $(1)/usr/lib/
 endef
 
+define PyPackage/python-headers/install
+	$(INSTALL_DIR) $(1)/usr/include/ $(1)/usr/lib/ $(1)/usr/lib/pkgconfig
+	$(INSTALL_DIR) $(1)/usr/lib/python$(PYTHON_VERSION)/
+	$(CP) \
+		$(PKG_INSTALL_DIR)/usr/include/python$(PYTHON_VERSION) \
+		$(1)/usr/include/
+	$(CP) \
+		$(STAGING_DIR)/usr/lib/pkgconfig/python.pc \
+		$(STAGING_DIR)/usr/lib/pkgconfig/python2.pc \
+		$(STAGING_DIR)/usr/lib/pkgconfig/python-$(PYTHON_VERSION).pc \
+		$(1)/usr/lib/pkgconfig
+	$(CP) \
+		$(PKG_INSTALL_DIR)/usr/lib/python$(PYTHON_VERSION)/config \
+		$(1)/usr/lib/python$(PYTHON_VERSION)/
+endef
+
 define PyPackage/python/filespec
 -|$(PYTHON_PKG_DIR)
 endef
@@ -258,8 +290,10 @@ $(foreach package, $(PYTHON_PACKAGES),  \
 
 $(eval $(call PyPackage,python-base))
 $(eval $(call PyPackage,python-light))
+$(eval $(call PyPackage,python-headers))
 $(eval $(call PyPackage,python))
 
 $(eval $(call BuildPackage,python-base))
 $(eval $(call BuildPackage,python-light))
+$(eval $(call BuildPackage,python-headers))
 $(eval $(call BuildPackage,python))
