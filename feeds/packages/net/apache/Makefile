@@ -97,6 +97,8 @@ define Build/Configure
 		--with-apr="$(STAGING_DIR)/usr/bin/apr-1-config" \
 		--with-apr-util="$(STAGING_DIR)/usr/bin/apu-1-config" \
 		--with-pcre="$(STAGING_DIR)/usr/bin/pcre-config" \
+		--enable-expires=shared \
+		--enable-headers=shared \
 		--enable-http \
 		--enable-ssl \
 		--enable-proxy \
