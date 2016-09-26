@@ -172,3 +172,204 @@ github web interface, befor above code is run.
 sudo rsync -av --delete /export/repo/openwrt/bin/ar71xx/ /var/www/openwrt/snapshot/14-dev/ar71xx/
 
 Note that openwrt.m-creations.net points to haproxy which runs on ports 80 and 443 on galen.
+* Working with Quilt patches
+
+See https://wiki.openwrt.org/doc/devel/patches
+
+OpenWrt Buildroot integrates Quilt for easy patch management.  This
+section outlines some common patching tasks like adding a new patch or
+editing existing ones.
+
+** Prepare quilt configuration
+
+In order to let /quilt/ create patches in OpenWrts preferred format,
+a configuration file =.quiltrc= containing common /diff/ and
+/patch/ options must be created in the local home directory.
+
+#+BEGIN_SRC 
+
+cat > ~/.quiltrc <<EOF
+QUILT_DIFF_ARGS="--no-timestamps --no-index -p ab --color=auto"
+QUILT_REFRESH_ARGS="--no-timestamps --no-index -p ab"
+QUILT_PATCH_OPTS="--unified"
+QUILT_DIFF_OPTS="-p"
+EDITOR="nano"
+EOF
+
+#+END_SRC
+
+- =EDITOR= specifies the preferred editor for interactive patch editing
+- The other variables control the patch format property like a/, b/ directory names and no timestamps
+- FreeBSD does not support the =%%--color\=auto%%= option and =-pab= must be written as =-p ab=
+
+===== Adding a new patch =====
+
+To add a completely new patch to an existing package //example// start with preparing the source directory:
+
+#+BEGIN_SRC 
+make package/example/{clean,prepare} V=s QUILT=1
+#+END_SRC
+
+For host-side packages, you may want to detail the make target:
+
+#+BEGIN_SRC 
+make package/example/host/{clean,prepare} V=s QUILT=1
+#+END_SRC
+
+
+This unpacks the source tarball and prepares existing patches as
+/quilt patch series/ (if any).  The verbose output will show where
+the source got extracted.
+
+
+Change to the prepared source directory. 
+
+#+BEGIN_SRC 
+cd build_dir/target-*/example-*
+#+END_SRC
+
+Note : It can happen that you need to go one level lower as the source
+is extracted in =build_dir/target-*/BUILD_VARIANT/example-*=. This
+happens when multiple build variants of a package are defined in the
+Makefile.
+
+Apply all existing patches using /quilt push/.
+
+#+BEGIN_SRC 
+quilt push -a
+#+END_SRC
+
+Create a new, empty patch file with the //quilt new// command:
+
+#+BEGIN_SRC 
+quilt new 010-main_code_fix.patch
+#+END_SRC
+
+- The name should start with a number, followed by a hyphen and a very short description of what is changed
+- The chosen number should be higher than any existing patch - use =quilt series= to see the list of patches
+- The patch file name should be short but descriptive
+
+
+After creating the empty patch, files to edit must be associated with
+it.  The =quilt add= command can be used for that - once the file got
+added it can be edited as usual.
+
+A shortcut for both adding a file and open it in an editor is the
+=quilt edit= command:
+
+#+BEGIN_SRC 
+quilt edit src/main.c
+#+END_SRC
+
+- =src/main.c= gets added to =010-main_code_fix.patch=
+- The file is opened in the editor specified with =EDITOR= in =.quiltrc=
+
+Repeat that for any file that needs to be edited.
+
+After the changes are finished, they can be reviewed with the //quilt diff// command.
+
+#+BEGIN_SRC 
+quilt diff
+#+END_SRC
+
+
+If the diff looks okay, proceed with =quilt refresh= to update the
+=010-main_code_fix.patch= file with the changes made.
+
+#+BEGIN_SRC 
+quilt refresh
+#+END_SRC
+
+Change back to the toplevel directory of the buildroot.
+
+To move the new patch file over to the buildroot, run =update= on the package:
+
+#+BEGIN_SRC 
+make package/example/update V=s
+#+END_SRC
+
+Finally rebuild the package to test the changes:
+
+#+BEGIN_SRC 
+make package/example/{clean,compile} package/index V=s
+#+END_SRC
+
+
+If problems occur, the patch needs to be edited again to solve the issues.
+Refer to the section below to learn how to edit existing patches.
+
+** Edit an existing patch
+
+Start with preparing the source directory:
+
+#+BEGIN_SRC 
+make package/example/{clean,prepare} V=s QUILT=1
+#+END_SRC
+
+Change to the prepared source directory.
+
+#+BEGIN_SRC 
+cd build_dir/target-*/example-*
+#+END_SRC
+
+List the patches available:
+
+#+BEGIN_SRC 
+quilt series
+#+END_SRC
+
+Advance to the patch that needs to be edited:
+
+#+BEGIN_SRC 
+quilt push 010-main_code_fix.patch
+#+END_SRC
+
+- When passing a valid patch filename to =push=, =quilt= will only apply the series until it reaches the specified patch
+- If unsure, use =quilt series= to see existing patches and =quilt top= to see the current position
+- If the current position is beyound the desired patch, use =quilt pop= to remove patches in the reverse order
+- You can use the "force" push option (e.g. =quilt push -f 010-main_code_fix.patch=) to interactively apply a broken (i.e. has rejects) patch
+
+
+Edit the patched files using the =quilt edit= command, repeat for
+every file that needs changes.
+
+#+BEGIN_SRC 
+quilt edit src/main.c
+#+END_SRC
+
+
+Check which files are to be included in the patch:
+
+#+BEGIN_SRC 
+quilt files
+#+END_SRC
+
+Review the changes with =quilt diff=.
+
+#+BEGIN_SRC 
+quilt diff
+#+END_SRC
+
+
+If the diff looks okay, proceed with =quilt refresh= to update the current patch with the changes made.
+
+#+BEGIN_SRC 
+quilt refresh
+#+END_SRC
+
+Change back to the toplevel diretory of the buildroot.
+
+To move the updated patch file over to the buildroot, run =update= on
+the package:
+
+#+BEGIN_SRC 
+make package/example/update V=s
+#+END_SRC
+
+
+Finally rebuild the package to test the changes:
+
+#+BEGIN_SRC 
+make package/example/{clean,compile} package/index V=s
+#+END_SRC
+
