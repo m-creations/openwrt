@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=postgresql
-PKG_VERSION:=9.4.4
+PKG_VERSION:=9.6.0
 PKG_RELEASE:=1
 PKG_MAINTAINER:=Jo-Philipp Wich <jow@openwrt.org>
 PKG_LICENSE:=PostgreSQL
@@ -18,7 +18,7 @@ PKG_SOURCE_URL:=\
 	http://ftp9.us.postgresql.org/pub/mirrors/postgresql/source/v$(PKG_VERSION) \
 	http://ftp.be.postgresql.org/postgresql/source/v$(PKG_VERSION) \
 	ftp://ftp-archives.postgresql.org/pub/source/v$(PKG_VERSION)
-PKG_MD5SUM:=1fe952c44ed26d7e6a335cf991a9c1c6
+PKG_MD5SUM:=c5af6ebb790ab877e1d2e56e19cebb29
 PKG_BUILD_PARALLEL:=1
 PKG_USE_MIPS16:=0
 PKG_FIXUP:=autoreconf
@@ -29,7 +29,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/libpq
   SECTION:=libs
   CATEGORY:=Libraries
-  DEPENDS:=+zlib +libreadline +libpthread +libncurses +shadow-utils +shadow-su
+  DEPENDS:=+zlib +libreadline +libpthread +libncurses +shadow-utils +shadow-su +libopenssl
   TITLE:=PostgreSQL client library
   URL:=http://www.postgresql.org/
   SUBMENU:=database
@@ -42,7 +42,7 @@ endef
 define Package/pgsql-cli
   SECTION:=utils
   CATEGORY:=Utilities
-  DEPENDS:=+libpq @USE_UCLIBC:+librt
+  DEPENDS:=+libpq @USE_UCLIBC:+librt +libopenssl
   TITLE:=Command Line Interface (CLI) to PostgreSQL databases
   URL:=http://www.postgresql.org/
   SUBMENU:=database
@@ -106,7 +106,7 @@ define Build/Configure
 			--without-bonjour \
 			--without-gssapi \
 			--without-ldap \
-			--without-openssl \
+			--with-openssl \
 			--without-pam \
 			--without-perl \
 			--without-python \
