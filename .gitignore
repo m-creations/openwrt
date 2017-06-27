@@ -25,3 +25,10 @@ key-build*
 .emacs.desktop*
 TAGS*~
 git-src
+dist/
+/host
+*.so
+*.swp
+*.po~
+/docs
+modules/luci-base/src/po2lmo
