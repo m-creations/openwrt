@@ -75,6 +75,11 @@ $(eval $(call TestHostCommand,zlib, \
 	echo 'int main(int argc, char **argv) { gzdopen(0, "rb"); return 0; }' | \
 		gcc -include zlib.h -x c -o $(TMP_DIR)/a.out - $(zlib_link_flags)))
 
+$(eval $(call TestHostCommand,libbz2, \
+       Please install libbz2. (Missing libbz2.so or bzlib.h), \
+       echo 'int main(int argc, char **argv) { bz_stream strm; BZ2_bzCompressEnd(&strm); return 0; }' | \
+               gcc -include bzlib.h -x c -o $(TMP_DIR)/a.out - -lbz2))
+
 $(eval $(call TestHostCommand,perl-thread-queue, \
 	Please install the Perl Thread::Queue module, \
 	perl -MThread::Queue -e 1))
