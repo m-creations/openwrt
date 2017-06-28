@@ -7,11 +7,9 @@ Subject: [PATCH 06/10] Create libhaproxy.so symbolic link
  Makefile | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/Makefile b/Makefile
-index 42a16e5..d8b6ef7 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -816,6 +816,7 @@ install-bin: haproxy $(EXTRA)
+@@ -864,6 +864,7 @@ install-bin:
  	install -d "$(DESTDIR)$(LIBDIR)"
  	install libhaproxy.so.$(VERSION) "$(DESTDIR)$(LIBDIR)"
  	ln -frs "$(DESTDIR)$(LIBDIR)/libhaproxy.so.$(VERSION)" "$(DESTDIR)$(LIBDIR)/libhaproxy.so.1"
@@ -19,6 +17,3 @@ index 42a16e5..d8b6ef7 100644
  	install haproxy $(EXTRA) "$(DESTDIR)$(SBINDIR)"
  
  install: install-bin install-man install-doc
--- 
-1.9.1
-

@@ -7,12 +7,10 @@ Subject: [PATCH 11/11] Just exit at the end of haproxy_main
  src/haproxy.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/src/haproxy.c b/src/haproxy.c
-index 95a3f6d..3f7effb 100644
 --- a/src/haproxy.c
 +++ b/src/haproxy.c
-@@ -1851,7 +1851,7 @@ int haproxy_main(int argc, char **argv)
- 	/* Do some cleanup */ 
+@@ -2006,7 +2006,7 @@ int haproxy_main(int argc, char **argv)
+ 	/* Do some cleanup */
  	deinit();
  
 -	return 0;
@@ -20,6 +18,3 @@ index 95a3f6d..3f7effb 100644
  }
  
  
--- 
-2.5.0
-

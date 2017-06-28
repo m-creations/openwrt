@@ -8,11 +8,9 @@ Subject: [PATCH 07/10] Do not call exit in haproxy.c
  src/main.c    |  4 +---
  2 files changed, 36 insertions(+), 36 deletions(-)
 
-diff --git a/src/haproxy.c b/src/haproxy.c
-index 408ebac..2a1934a 100644
 --- a/src/haproxy.c
 +++ b/src/haproxy.c
-@@ -357,7 +357,6 @@ void usage(char *name)
+@@ -383,7 +383,6 @@ void usage(char *name)
  		"        -sf/-st [pid ]* finishes/terminates old pids.\n"
  		"\n",
  		name, DEFAULT_MAXCONN, cfg_maxpconn);
@@ -20,7 +18,60 @@ index 408ebac..2a1934a 100644
  }
  
  
-@@ -452,10 +451,10 @@ void dump(struct sig_handler *sh)
+@@ -484,7 +483,7 @@ void dump(struct sig_handler *sh)
+  * It add only files with .cfg extension.
+  * It doesn't add files with name starting with '.'
+  */
+-void cfgfiles_expand_directories(void)
++int cfgfiles_expand_directories(void)
+ {
+ 	struct wordlist *wl, *wlb;
+ 	char *err = NULL;
+@@ -499,7 +498,7 @@ void cfgfiles_expand_directories(void)
+ 			Alert("Cannot open configuration file/directory %s : %s\n",
+ 			      wl->s,
+ 			      strerror(errno));
+-			exit(1);
++			return 1;
+ 		}
+ 
+ 		if (!S_ISDIR(file_stat.st_mode))
+@@ -512,7 +511,7 @@ void cfgfiles_expand_directories(void)
+ 			Alert("Cannot open configuration directory %s : %s\n",
+ 			      wl->s,
+ 			      strerror(errno));
+-			exit(1);
++			return 1;
+ 		}
+ 
+ 		/* for each element in the directory wl->s */
+@@ -531,14 +530,14 @@ void cfgfiles_expand_directories(void)
+ 			if (!memprintf(&filename, "%s/%s", wl->s, dir_entry->d_name)) {
+ 				Alert("Cannot load configuration files %s : out of memory.\n",
+ 				      filename);
+-				exit(1);
++				return 1;
+ 			}
+ 
+ 			if (stat(filename, &file_stat)) {
+ 				Alert("Cannot open configuration file %s : %s\n",
+ 				      wl->s,
+ 				      strerror(errno));
+-				exit(1);
++				return 1;
+ 			}
+ 
+ 			/* don't add anything else than regular file in cfg_cfgfiles
+@@ -551,7 +550,7 @@ void cfgfiles_expand_directories(void)
+ 				Alert("Cannot load configuration files %s : %s\n",
+ 				      filename,
+ 				      err);
+-				exit(1);
++				return 1;
+ 			}
+ 
+ next_dir_entry:
+@@ -571,10 +570,10 @@ next_dir_entry:
  }
  
  /*
@@ -34,8 +85,8 @@ index 408ebac..2a1934a 100644
  {
  	int arg_mode = 0;	/* MODE_DEBUG, ... */
  	char *tmp;
-@@ -500,7 +499,7 @@ void init(int argc, char **argv)
- 
+@@ -619,7 +618,7 @@ void init(int argc, char **argv)
+ 	init_log();
  	signal_init();
  	if (init_acl() != 0)
 -		exit(1);
@@ -43,7 +94,7 @@ index 408ebac..2a1934a 100644
  	init_task();
  	init_stream();
  	init_session();
-@@ -549,7 +548,7 @@ void init(int argc, char **argv)
+@@ -674,7 +673,7 @@ void init(int argc, char **argv)
  				display_version();
  				if (flag[1] == 'v')  /* -vv */
  					display_build_opts();
@@ -52,25 +103,34 @@ index 408ebac..2a1934a 100644
  			}
  #if defined(ENABLE_EPOLL)
  			else if (*flag == 'd' && flag[1] == 'e')
-@@ -618,7 +617,7 @@ void init(int argc, char **argv)
- 					wl = (struct wordlist *)calloc(1, sizeof(*wl));
- 					if (!wl) {
- 						Alert("Cannot load configuration file %s : out of memory.\n", *argv);
+@@ -733,7 +732,7 @@ void init(int argc, char **argv)
+ 					oldpids = realloc(oldpids, (nb_oldpids + 1) * sizeof(int));
+ 					if (!oldpids) {
+ 						Alert("Cannot allocate old pid : out of memory.\n");
 -						exit(1);
 +						return 1;
  					}
- 					wl->s = *argv;
- 					LIST_ADDQ(&cfg_cfgfiles, &wl->list);
-@@ -641,7 +640,7 @@ void init(int argc, char **argv)
- 					wl = (struct wordlist *)calloc(1, sizeof(*wl));
- 					if (!wl) {
- 						Alert("Cannot load configuration file %s : out of memory.\n", *argv);
+ 					argc--; argv++;
+ 					oldpids[nb_oldpids] = atol(*argv);
+@@ -750,7 +749,7 @@ void init(int argc, char **argv)
+ 						Alert("Cannot load configuration file/directory %s : %s\n",
+ 						      *argv,
+ 						      err_msg);
 -						exit(1);
 +						return 1;
  					}
- 					wl->s = *argv;
- 					LIST_ADDQ(&cfg_cfgfiles, &wl->list);
-@@ -665,7 +664,7 @@ void init(int argc, char **argv)
+ 					argv++; argc--;
+ 				}
+@@ -772,7 +771,7 @@ void init(int argc, char **argv)
+ 						Alert("Cannot load configuration file/directory %s : %s\n",
+ 						      *argv,
+ 						      err_msg);
+-						exit(1);
++						return 1;
+ 					}
+ 					break;
+ 				case 'p' : cfg_pidfile = *argv; break;
+@@ -791,11 +790,12 @@ void init(int argc, char **argv)
  
  	if (change_dir && chdir(change_dir) < 0) {
  		Alert("Could not change to directory %s : %s\n", change_dir, strerror(errno));
@@ -78,8 +138,14 @@ index 408ebac..2a1934a 100644
 +		return 1;
  	}
  
- 	global.maxsock = 10; /* reserve 10 fds ; will be incremented by socket eaters */
-@@ -679,13 +678,13 @@ void init(int argc, char **argv)
+ 	/* handle cfgfiles that are actualy directories */
+-	cfgfiles_expand_directories();
++	if(cfgfiles_expand_directories())
++                return 1;
+ 
+ 	if (LIST_ISEMPTY(&cfg_cfgfiles))
+ 		usage(progname);
+@@ -811,13 +811,13 @@ void init(int argc, char **argv)
  		if (ret == -1) {
  			Alert("Could not open configuration file %s : %s\n",
  			      wl->s, strerror(errno));
@@ -95,7 +161,7 @@ index 408ebac..2a1934a 100644
  	}
  
  	pattern_finalize_config();
-@@ -696,7 +695,7 @@ void init(int argc, char **argv)
+@@ -828,7 +828,7 @@ void init(int argc, char **argv)
  	err_code |= check_config_validity();
  	if (err_code & (ERR_ABORT|ERR_FATAL)) {
  		Alert("Fatal errors found in configuration.\n");
@@ -104,7 +170,7 @@ index 408ebac..2a1934a 100644
  	}
  
  	/* recompute the amount of per-process memory depending on nbproc and
-@@ -719,7 +718,7 @@ void init(int argc, char **argv)
+@@ -851,7 +851,7 @@ void init(int argc, char **argv)
          err_code |= netns_init();
          if (err_code & (ERR_ABORT|ERR_FATAL)) {
                  Alert("Failed to initialize namespace support.\n");
@@ -113,7 +179,16 @@ index 408ebac..2a1934a 100644
          }
  #endif
  
-@@ -738,10 +737,10 @@ void init(int argc, char **argv)
+@@ -865,7 +865,7 @@ void init(int argc, char **argv)
+ 	err_code |= srv_init_addr();
+ 	if (err_code & (ERR_ABORT|ERR_FATAL)) {
+ 		Alert("Failed to initialize server(s) addr.\n");
+-		exit(1);
++		return 1;
+ 	}
+ 
+ 	if (global.mode & MODE_CHECK) {
+@@ -883,16 +883,16 @@ void init(int argc, char **argv)
  		if (pr || px) {
  			/* At least one peer or one listener has been found */
  			qfprintf(stdout, "Configuration file is valid\n");
@@ -125,8 +200,6 @@ index 408ebac..2a1934a 100644
 +		return 2;
  	}
  
- 	/* Apply server states */
-@@ -750,7 +749,7 @@ void init(int argc, char **argv)
  	global_listener_queue_task = task_new();
  	if (!global_listener_queue_task) {
  		Alert("Out of memory when initializing global task\n");
@@ -135,8 +208,14 @@ index 408ebac..2a1934a 100644
  	}
  	/* very simple initialization, users will queue the task if needed */
  	global_listener_queue_task->context = NULL; /* not even a context! */
-@@ -767,7 +766,7 @@ void init(int argc, char **argv)
- #endif
+@@ -916,12 +916,12 @@ void init(int argc, char **argv)
+ 		if (err_code & (ERR_ABORT|ERR_FATAL)) {
+ 			Alert("Failed to initialize filters for proxy '%s'.\n",
+ 			      px->id);
+-			exit(1);
++			return 1;
+ 		}
+ 	}
  
  	if (start_checks() < 0)
 -		exit(1);
@@ -144,7 +223,7 @@ index 408ebac..2a1934a 100644
  
  	if (cfg_maxconn > 0)
  		global.maxconn = cfg_maxconn;
-@@ -865,7 +864,7 @@ void init(int argc, char **argv)
+@@ -1019,7 +1019,7 @@ void init(int argc, char **argv)
  			      global.rlimit_memmax,
  			      (int)(mem / (STREAM_MAX_COST + 2 * global.tune.bufsize)),
  			      global.maxconn);
@@ -153,7 +232,7 @@ index 408ebac..2a1934a 100644
  		}
  
  		if (global.maxsslconn > sides * global.maxconn)
-@@ -905,7 +904,7 @@ void init(int argc, char **argv)
+@@ -1059,7 +1059,7 @@ void init(int argc, char **argv)
  			      global.rlimit_memmax,
  			      (int)(mem / (global.ssl_session_max_cost + global.ssl_handshake_max_cost)),
  			      global.maxsslconn);
@@ -162,7 +241,7 @@ index 408ebac..2a1934a 100644
  		}
  
  		if (global.mode & (MODE_VERBOSE|MODE_DEBUG)) {
-@@ -1037,7 +1036,7 @@ void init(int argc, char **argv)
+@@ -1192,7 +1192,7 @@ void init(int argc, char **argv)
  		      "  %d file descriptors. You should thus reduce global.maxconn by %d. Also,\n"
  		      "  check build settings using 'haproxy -vv'.\n\n",
  		      FD_SETSIZE, global.maxconn, global.maxsock, (global.maxsock + 1 - FD_SETSIZE) / 2);
@@ -171,7 +250,7 @@ index 408ebac..2a1934a 100644
  	}
  	if (global.mode & (MODE_VERBOSE|MODE_DEBUG)) {
  		printf("Using %s() as the polling mechanism.\n", cur_poller.name);
-@@ -1047,11 +1046,11 @@ void init(int argc, char **argv)
+@@ -1202,11 +1202,11 @@ void init(int argc, char **argv)
  		global.node = strdup(hostname);
  
  	if (!hlua_post_init())
@@ -179,13 +258,13 @@ index 408ebac..2a1934a 100644
 +		return 1;
  
  	/* initialize structures for name resolution */
- 	if (!dns_init_resolvers())
+ 	if (!dns_init_resolvers(0))
 -		exit(1);
 +		return 1;
- }
  
- static void deinit_acl_cond(struct acl_cond *cond)
-@@ -1541,7 +1540,10 @@ int haproxy_main(int argc, char **argv)
+ 	free(err_msg);
+ }
+@@ -1676,7 +1676,10 @@ int haproxy_main(int argc, char **argv)
  	char errmsg[100];
  	int pidfd = -1;
  
@@ -197,7 +276,7 @@ index 408ebac..2a1934a 100644
  	signal_register_fct(SIGQUIT, dump, SIGQUIT);
  	signal_register_fct(SIGUSR1, sig_soft_stop, SIGUSR1);
  	signal_register_fct(SIGHUP, sig_dump_state, SIGHUP);
-@@ -1616,14 +1618,14 @@ int haproxy_main(int argc, char **argv)
+@@ -1758,14 +1761,14 @@ int haproxy_main(int argc, char **argv)
  			protocol_unbind_all(); /* cleanup everything we can */
  			tell_old_pids(SIGTTIN);
  		}
@@ -214,7 +293,7 @@ index 408ebac..2a1934a 100644
  	}
  
  	err = protocol_bind_all(errmsg, sizeof(errmsg));
-@@ -1635,7 +1637,7 @@ int haproxy_main(int argc, char **argv)
+@@ -1777,7 +1780,7 @@ int haproxy_main(int argc, char **argv)
  		protocol_unbind_all(); /* cleanup everything we can */
  		if (nb_oldpids)
  			tell_old_pids(SIGTTIN);
@@ -223,7 +302,7 @@ index 408ebac..2a1934a 100644
  	} else if (err & ERR_WARN) {
  		Alert("[%s.main()] %s.\n", argv[0], errmsg);
  	}
-@@ -1661,7 +1663,7 @@ int haproxy_main(int argc, char **argv)
+@@ -1803,7 +1806,7 @@ int haproxy_main(int argc, char **argv)
  			if (nb_oldpids)
  				tell_old_pids(SIGTTIN);
  			protocol_unbind_all();
@@ -232,7 +311,7 @@ index 408ebac..2a1934a 100644
  		}
  	}
  
-@@ -1669,7 +1671,7 @@ int haproxy_main(int argc, char **argv)
+@@ -1811,7 +1814,7 @@ int haproxy_main(int argc, char **argv)
  		Alert("[%s.main()] Some configuration options require full privileges, so global.uid cannot be changed.\n"
  		      "", argv[0]);
  		protocol_unbind_all();
@@ -241,7 +320,7 @@ index 408ebac..2a1934a 100644
  	}
  
  	/* If the user is not root, we'll still let him try the configuration
-@@ -1687,7 +1689,7 @@ int haproxy_main(int argc, char **argv)
+@@ -1829,7 +1832,7 @@ int haproxy_main(int argc, char **argv)
  			if (nb_oldpids)
  				tell_old_pids(SIGTTIN);
  			protocol_unbind_all();
@@ -250,7 +329,7 @@ index 408ebac..2a1934a 100644
  		}
  	}
  
-@@ -1707,14 +1709,14 @@ int haproxy_main(int argc, char **argv)
+@@ -1849,14 +1852,14 @@ int haproxy_main(int argc, char **argv)
  		if (setgid(global.gid) == -1) {
  			Alert("[%s.main()] Cannot set gid %d.\n", argv[0], global.gid);
  			protocol_unbind_all();
@@ -267,7 +346,7 @@ index 408ebac..2a1934a 100644
  	}
  
  	/* check ulimits */
-@@ -1738,7 +1740,7 @@ int haproxy_main(int argc, char **argv)
+@@ -1881,7 +1884,7 @@ int haproxy_main(int argc, char **argv)
  			if (ret < 0) {
  				Alert("[%s.main()] Cannot fork.\n", argv[0]);
  				protocol_unbind_all();
@@ -276,17 +355,24 @@ index 408ebac..2a1934a 100644
  			}
  			else if (ret == 0) /* child breaks here */
  				break;
-@@ -1778,7 +1780,7 @@ int haproxy_main(int argc, char **argv)
+@@ -1937,7 +1940,7 @@ int haproxy_main(int argc, char **argv)
  				for (proc = 0; proc < global.nbproc; proc++)
- 					while (waitpid(children[proc], NULL, 0) == -1 && errno == EINTR);
+ 					while (waitpid(-1, NULL, 0) == -1 && errno == EINTR);
  			}
 -			exit(0); /* parent must leave */
 +			return 0; /* parent must leave */
  		}
  
  		/* we might have to unbind some proxies from some processes */
-diff --git a/src/main.c b/src/main.c
-index 3d82f68..6c7f5f1 100644
+@@ -1989,7 +1992,7 @@ int haproxy_main(int argc, char **argv)
+ 
+ 	/* initialize structures for name resolution */
+ 	if (!dns_init_resolvers(1))
+-		exit(1);
++		return 1;
+ 
+ 	protocol_enable_all();
+ 	/*
 --- a/src/main.c
 +++ b/src/main.c
 @@ -29,9 +29,7 @@
@@ -300,6 +386,3 @@ index 3d82f68..6c7f5f1 100644
  }
  
  
--- 
-1.9.1
-
