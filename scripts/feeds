@@ -745,7 +745,8 @@ sub update {
 	if ( ($#ARGV == -1) or $opts{a}) {
 		foreach my $feed (@feeds) {
 			my ($type, $name, $src) = @$feed;
-			update_feed($type, $name, $src, $perform_update, $opts{f}) == 0 or $failed=1;
+			warn "m-creations patch prevents updating the feed $name"
+			# update_feed($type, $name, $src, $perform_update, $opts{f}) == 0 or $failed=1;
 		}
 	} else {
 		while ($feed_name = shift @ARGV) {
@@ -754,7 +755,8 @@ sub update {
 				if($feed_name ne $name) {
 					next;
 				}
-				update_feed($type, $name, $src, $perform_update, $opts{f}) == 0 or $failed=1;
+				warn "m-creations patch prevents updating the feed $name"
+				# update_feed($type, $name, $src, $perform_update, $opts{f}) == 0 or $failed=1;
 			}
 		}
 	}
