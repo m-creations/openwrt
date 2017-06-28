@@ -1,6 +1,15 @@
 --- a/makedefs
 +++ b/makedefs
-@@ -530,7 +530,7 @@ EOF
+@@ -213,7 +213,7 @@ esac
+ 
+ case "$SYSTEM.$RELEASE" in
+    OpenWRT*)    SYSTYPE=LINUX$RELEASE_MAJOR
+-		SYSLIBS="$SYSLIBS -ldl"
++		SYSLIBS="$SYSLIBS -ldl -lresolv"
+ 		: ${SHLIB_SUFFIX=.so}
+ 		: ${SHLIB_CFLAGS=-fPIC}
+ 		: ${SHLIB_LD="${CC-gcc} -shared"' -Wl,-soname,${LIB}'}
+@@ -562,7 +562,7 @@ EOF
  			}
  		    done
  		done
