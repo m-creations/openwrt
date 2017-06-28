@@ -50,16 +50,8 @@ define Package/haproxy/Default/description
  Open source Reliable, High Performance TCP/HTTP Load Balancer.
 endef
 
-define Package/libhaproxy
-  SECTION:=libs
-  CATEGORY:=Libraries
-  DEPENDS+= +libpcre +libltdl +zlib +libpthread +libopenssl +libncursesw +libreadline +@OPENSSL_WITH_DEPRECATED +@OPENSSL_WITH_EC +@OPENSSL_WITH_EC2M  +@OPENSSL_WITH_DTLS +@OPENSSL_WITH_COMPRESSION +@OPENSSL_WITH_NPN  +@OPENSSL_WITH_PSK +@OPENSSL_WITH_SRP +@OPENSSL_ENGINE_DIGEST +@OPENSSL_ENGINE_CRYPTO
-  TITLE:=HAProxy shared library
-  URL:=http://haproxy.org/
-endef
-
 define Package/haproxy
-  DEPENDS+= +libhaproxy
+  DEPENDS+= +libpcre +libltdl +zlib +libpthread +libopenssl +libncursesw +libreadline +@OPENSSL_WITH_DEPRECATED +@OPENSSL_WITH_EC +@OPENSSL_WITH_EC2M  +@OPENSSL_WITH_DTLS +@OPENSSL_WITH_COMPRESSION +@OPENSSL_WITH_NPN  +@OPENSSL_WITH_PSK +@OPENSSL_WITH_SRP +@OPENSSL_ENGINE_DIGEST +@OPENSSL_ENGINE_CRYPTO
   TITLE+= (with SSL support)
   VARIANT:=ssl
 $(call Package/haproxy/Default)
@@ -82,7 +74,7 @@ endef
 define Package/haproxy-nossl
   TITLE+= (without SSL support)
   VARIANT:=nossl
-  DEPENDS+= +libhaproxy
+  DEPENDS+= +libpcre +libltdl +zlib +libpthread +libncursesw +libreadline
   TITLE+= (without SSL support)
 $(call Package/haproxy/Default)
 endef
@@ -167,11 +159,6 @@ endef
 
 Package/haproxy-nossl/install = $(Package/haproxy/install)
 
-define Package/libhaproxy/install
-	$(INSTALL_DIR) $(1)/usr/lib
-	$(CP) $(PKG_INSTALL_DIR)/usr/local/lib/libhaproxy* $(1)/usr/lib/
-endef
-
 define Package/halog
 	MENU:=1
 	$(call Package/haproxy)
@@ -189,7 +176,6 @@ define Package/halog/install
 endef
 
 $(eval $(call Download,lua533))
-$(eval $(call BuildPackage,libhaproxy))
 $(eval $(call BuildPackage,haproxy))
 $(eval $(call BuildPackage,halog))
 $(eval $(call BuildPackage,haproxy-nossl))
