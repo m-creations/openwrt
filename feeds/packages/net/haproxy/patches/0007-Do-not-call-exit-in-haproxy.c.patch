@@ -1,0 +1,328 @@
+From 2153b72fdd4295344747f5dca1cfc0d9f10728cf Mon Sep 17 00:00:00 2001
+From: Kambiz Darabi <darabi@m-creations.net>
+Date: Sat, 23 Jan 2016 17:11:59 +0100
+Subject: [PATCH 07/10] Do not call exit in haproxy.c
+
+---
+ src/haproxy.c | 68 ++++++++++++++++++++++++++++++-----------------------------
+ src/main.c    |  4 +---
+ 2 files changed, 36 insertions(+), 36 deletions(-)
+
+--- a/src/haproxy.c
++++ b/src/haproxy.c
+@@ -364,7 +364,6 @@ void usage(char *name)
+ 		"        -sf/-st [pid ]* finishes/terminates old pids.\n"
+ 		"\n",
+ 		name, DEFAULT_MAXCONN, cfg_maxpconn);
+-	exit(1);
+ }
+ 
+ 
+@@ -459,10 +458,10 @@ void dump(struct sig_handler *sh)
+ }
+ 
+ /*
+- * This function initializes all the necessary variables. It only returns
+- * if everything is OK. If something fails, it exits.
++ * This function initializes all the necessary variables. It returns
++ * 0 if everything is OK. If something fails, it returns a non-zero error code.
+  */
+-void init(int argc, char **argv)
++int init(int argc, char **argv)
+ {
+ 	int arg_mode = 0;	/* MODE_DEBUG, ... */
+ 	char *tmp;
+@@ -488,9 +487,9 @@ void init(int argc, char **argv)
+ 	/*
+ 	 * Initialize the previously static variables.
+ 	 */
+-    
++
+ 	totalconn = actconn = maxfd = listeners = stopping = 0;
+-    
++
+ 
+ #ifdef HAPROXY_MEMMAX
+ 	global.rlimit_memmax_all = HAPROXY_MEMMAX;
+@@ -504,7 +503,7 @@ void init(int argc, char **argv)
+ 
+ 	signal_init();
+ 	if (init_acl() != 0)
+-		exit(1);
++		return 1;
+ 	init_task();
+ 	init_stream();
+ 	init_session();
+@@ -556,7 +555,7 @@ void init(int argc, char **argv)
+ 				display_version();
+ 				if (flag[1] == 'v')  /* -vv */
+ 					display_build_opts();
+-				exit(0);
++				return 0;
+ 			}
+ #if defined(ENABLE_EPOLL)
+ 			else if (*flag == 'd' && flag[1] == 'e')
+@@ -629,7 +628,7 @@ void init(int argc, char **argv)
+ 					wl = (struct wordlist *)calloc(1, sizeof(*wl));
+ 					if (!wl) {
+ 						Alert("Cannot load configuration file %s : out of memory.\n", *argv);
+-						exit(1);
++						return 1;
+ 					}
+ 					wl->s = *argv;
+ 					LIST_ADDQ(&cfg_cfgfiles, &wl->list);
+@@ -652,7 +651,7 @@ void init(int argc, char **argv)
+ 					wl = (struct wordlist *)calloc(1, sizeof(*wl));
+ 					if (!wl) {
+ 						Alert("Cannot load configuration file %s : out of memory.\n", *argv);
+-						exit(1);
++						return 1;
+ 					}
+ 					wl->s = *argv;
+ 					LIST_ADDQ(&cfg_cfgfiles, &wl->list);
+@@ -676,7 +675,7 @@ void init(int argc, char **argv)
+ 
+ 	if (change_dir && chdir(change_dir) < 0) {
+ 		Alert("Could not change to directory %s : %s\n", change_dir, strerror(errno));
+-		exit(1);
++		return 1;
+ 	}
+ 
+ 	global.maxsock = 10; /* reserve 10 fds ; will be incremented by socket eaters */
+@@ -690,13 +689,13 @@ void init(int argc, char **argv)
+ 		if (ret == -1) {
+ 			Alert("Could not open configuration file %s : %s\n",
+ 			      wl->s, strerror(errno));
+-			exit(1);
++			return 1;
+ 		}
+ 		if (ret & (ERR_ABORT|ERR_FATAL))
+ 			Alert("Error(s) found in configuration file : %s\n", wl->s);
+ 		err_code |= ret;
+ 		if (err_code & ERR_ABORT)
+-			exit(1);
++			return 1;
+ 	}
+ 
+ 	/* do not try to resolve arguments nor to spot inconsistencies when
+@@ -716,7 +715,7 @@ void init(int argc, char **argv)
+ 	err_code |= check_config_validity();
+ 	if (err_code & (ERR_ABORT|ERR_FATAL)) {
+ 		Alert("Fatal errors found in configuration.\n");
+-		exit(1);
++		return 1;
+ 	}
+ 
+ 	/* recompute the amount of per-process memory depending on nbproc and
+@@ -739,7 +738,7 @@ void init(int argc, char **argv)
+         err_code |= netns_init();
+         if (err_code & (ERR_ABORT|ERR_FATAL)) {
+                 Alert("Failed to initialize namespace support.\n");
+-                exit(1);
++                return 1;
+         }
+ #endif
+ 
+@@ -758,10 +757,10 @@ void init(int argc, char **argv)
+ 		if (pr || px) {
+ 			/* At least one peer or one listener has been found */
+ 			qfprintf(stdout, "Configuration file is valid\n");
+-			exit(0);
++			return 0;
+ 		}
+ 		qfprintf(stdout, "Configuration file has no error but will not start (no listener) => exit(2).\n");
+-		exit(2);
++		return 2;
+ 	}
+ 
+ 	/* Apply server states */
+@@ -773,7 +772,7 @@ void init(int argc, char **argv)
+ 	global_listener_queue_task = task_new();
+ 	if (!global_listener_queue_task) {
+ 		Alert("Out of memory when initializing global task\n");
+-		exit(1);
++		return 1;
+ 	}
+ 	/* very simple initialization, users will queue the task if needed */
+ 	global_listener_queue_task->context = NULL; /* not even a context! */
+@@ -790,7 +789,7 @@ void init(int argc, char **argv)
+ #endif
+ 
+ 	if (start_checks() < 0)
+-		exit(1);
++		return 1;
+ 
+ 	if (cfg_maxconn > 0)
+ 		global.maxconn = cfg_maxconn;
+@@ -888,7 +887,7 @@ void init(int argc, char **argv)
+ 			      global.rlimit_memmax,
+ 			      (int)(mem / (STREAM_MAX_COST + 2 * global.tune.bufsize)),
+ 			      global.maxconn);
+-			exit(1);
++			return 1;
+ 		}
+ 
+ 		if (global.maxsslconn > sides * global.maxconn)
+@@ -928,7 +927,7 @@ void init(int argc, char **argv)
+ 			      global.rlimit_memmax,
+ 			      (int)(mem / (global.ssl_session_max_cost + global.ssl_handshake_max_cost)),
+ 			      global.maxsslconn);
+-			exit(1);
++			return 1;
+ 		}
+ 
+ 		if (global.mode & (MODE_VERBOSE|MODE_DEBUG)) {
+@@ -1060,7 +1059,7 @@ void init(int argc, char **argv)
+ 		      "  %d file descriptors. You should thus reduce global.maxconn by %d. Also,\n"
+ 		      "  check build settings using 'haproxy -vv'.\n\n",
+ 		      FD_SETSIZE, global.maxconn, global.maxsock, (global.maxsock + 1 - FD_SETSIZE) / 2);
+-		exit(1);
++		return 1;
+ 	}
+ 	if (global.mode & (MODE_VERBOSE|MODE_DEBUG)) {
+ 		printf("Using %s() as the polling mechanism.\n", cur_poller.name);
+@@ -1070,11 +1069,11 @@ void init(int argc, char **argv)
+ 		global.node = strdup(hostname);
+ 
+ 	if (!hlua_post_init())
+-		exit(1);
++		return 1;
+ 
+ 	/* initialize structures for name resolution */
+ 	if (!dns_init_resolvers(0))
+-		exit(1);
++		return 1;
+ }
+ 
+ static void deinit_acl_cond(struct acl_cond *cond)
+@@ -1478,7 +1477,7 @@ void deinit(void)
+ 	pool_destroy2(pool2_sig_handlers);
+ 	pool_destroy2(pool2_hdr_idx);
+ 	pool_destroy2(pool2_http_txn);
+-    
++
+ 	deinit_pollers();
+ } /* end deinit() */
+ 
+@@ -1565,7 +1564,10 @@ int haproxy_main(int argc, char **argv)
+ 	char errmsg[100];
+ 	int pidfd = -1;
+ 
+-	init(argc, argv);
++	err = init(argc, argv);
++	if(err) {
++		return err;
++	}
+ 	signal_register_fct(SIGQUIT, dump, SIGQUIT);
+ 	signal_register_fct(SIGUSR1, sig_soft_stop, SIGUSR1);
+ 	signal_register_fct(SIGHUP, sig_dump_state, SIGHUP);
+@@ -1647,14 +1649,14 @@ int haproxy_main(int argc, char **argv)
+ 			protocol_unbind_all(); /* cleanup everything we can */
+ 			tell_old_pids(SIGTTIN);
+ 		}
+-		exit(1);
++		return 1;
+ 	}
+ 
+ 	if (listeners == 0) {
+ 		Alert("[%s.main()] No enabled listener found (check for 'bind' directives) ! Exiting.\n", argv[0]);
+ 		/* Note: we don't have to send anything to the old pids because we
+ 		 * never stopped them. */
+-		exit(1);
++		return 1;
+ 	}
+ 
+ 	err = protocol_bind_all(errmsg, sizeof(errmsg));
+@@ -1666,7 +1668,7 @@ int haproxy_main(int argc, char **argv)
+ 		protocol_unbind_all(); /* cleanup everything we can */
+ 		if (nb_oldpids)
+ 			tell_old_pids(SIGTTIN);
+-		exit(1);
++		return 1;
+ 	} else if (err & ERR_WARN) {
+ 		Alert("[%s.main()] %s.\n", argv[0], errmsg);
+ 	}
+@@ -1692,7 +1694,7 @@ int haproxy_main(int argc, char **argv)
+ 			if (nb_oldpids)
+ 				tell_old_pids(SIGTTIN);
+ 			protocol_unbind_all();
+-			exit(1);
++			return 1;
+ 		}
+ 	}
+ 
+@@ -1700,7 +1702,7 @@ int haproxy_main(int argc, char **argv)
+ 		Alert("[%s.main()] Some configuration options require full privileges, so global.uid cannot be changed.\n"
+ 		      "", argv[0]);
+ 		protocol_unbind_all();
+-		exit(1);
++		return 1;
+ 	}
+ 
+ 	/* If the user is not root, we'll still let him try the configuration
+@@ -1718,7 +1720,7 @@ int haproxy_main(int argc, char **argv)
+ 			if (nb_oldpids)
+ 				tell_old_pids(SIGTTIN);
+ 			protocol_unbind_all();
+-			exit(1);
++			return 1;
+ 		}
+ 	}
+ 
+@@ -1738,14 +1740,14 @@ int haproxy_main(int argc, char **argv)
+ 		if (setgid(global.gid) == -1) {
+ 			Alert("[%s.main()] Cannot set gid %d.\n", argv[0], global.gid);
+ 			protocol_unbind_all();
+-			exit(1);
++			return 1;
+ 		}
+ 	}
+ 
+ 	if (global.uid && setuid(global.uid) == -1) {
+ 		Alert("[%s.main()] Cannot set uid %d.\n", argv[0], global.uid);
+ 		protocol_unbind_all();
+-		exit(1);
++		return 1;
+ 	}
+ 
+ 	/* check ulimits */
+@@ -1770,7 +1772,7 @@ int haproxy_main(int argc, char **argv)
+ 			if (ret < 0) {
+ 				Alert("[%s.main()] Cannot fork.\n", argv[0]);
+ 				protocol_unbind_all();
+-				exit(1); /* there has been an error */
++				return 1; /* there has been an error */
+ 			}
+ 			else if (ret == 0) /* child breaks here */
+ 				break;
+@@ -1819,7 +1821,7 @@ int haproxy_main(int argc, char **argv)
+ 				for (proc = 0; proc < global.nbproc; proc++)
+ 					while (waitpid(-1, NULL, 0) == -1 && errno == EINTR);
+ 			}
+-			exit(0); /* parent must leave */
++			return 0; /* parent must leave */
+ 		}
+ 
+ 		/* we might have to unbind some proxies from some processes */
+@@ -1879,7 +1881,7 @@ int haproxy_main(int argc, char **argv)
+ 	 */
+ 	run_poll_loop();
+ 
+-	/* Do some cleanup */ 
++	/* Do some cleanup */
+ 	deinit();
+ }
+ 
+--- a/src/main.c
++++ b/src/main.c
+@@ -29,9 +29,7 @@
+ 
+ int main(int argc, char **argv)
+ {
+-	haproxy_main(argc, argv);
+-
+-	exit(0);
++	exit(haproxy_main(argc, argv));
+ }
+ 
+ 
