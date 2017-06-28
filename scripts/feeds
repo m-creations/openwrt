@@ -48,7 +48,7 @@ sub parse_config() {
 		die "Unable to open feeds configuration";
 	while (<FEEDS>) {
 		chomp;
-		s/#.+$//;
+		s/#.*$//;
 		next unless /\S/;
 		my @line = split /\s+/, $_, 3;
 		my @src;
