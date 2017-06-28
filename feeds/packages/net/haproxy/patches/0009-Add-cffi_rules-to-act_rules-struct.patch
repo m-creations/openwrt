@@ -7,11 +7,9 @@ Subject: [PATCH 09/10] Add cffi_rules to act_rules struct
  include/types/action.h | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/include/types/action.h b/include/types/action.h
-index b97f9bf..433be96 100644
 --- a/include/types/action.h
 +++ b/include/types/action.h
-@@ -140,6 +140,7 @@ struct act_rule {
+@@ -142,6 +142,7 @@ struct act_rule {
  			int idx;
  		} capid;
  		struct hlua_rule *hlua_rule;
@@ -19,6 +17,3 @@ index b97f9bf..433be96 100644
  		struct {
  			struct sample_expr *expr;
  			const char *name;
--- 
-1.9.1
-

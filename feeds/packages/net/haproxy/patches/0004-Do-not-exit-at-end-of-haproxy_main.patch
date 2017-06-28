@@ -8,21 +8,17 @@ Subject: [PATCH 04/10] Do not exit at end of haproxy_main
  src/main.c    | 2 ++
  2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/src/haproxy.c b/src/haproxy.c
-index 9658b46..408ebac 100644
 --- a/src/haproxy.c
 +++ b/src/haproxy.c
-@@ -1836,8 +1836,6 @@ int haproxy_main(int argc, char **argv)
+@@ -1999,8 +1999,6 @@ int haproxy_main(int argc, char **argv)
  
- 	/* Do some cleanup */ 
+ 	/* Do some cleanup */
  	deinit();
--    
+-
 -	exit(0);
  }
  
  
-diff --git a/src/main.c b/src/main.c
-index 7de0b69..3d82f68 100644
 --- a/src/main.c
 +++ b/src/main.c
 @@ -30,6 +30,8 @@
@@ -34,6 +30,3 @@ index 7de0b69..3d82f68 100644
  }
  
  
--- 
-1.9.1
-

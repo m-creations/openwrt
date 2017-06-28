@@ -9,11 +9,52 @@ Subject: [PATCH 03/10] Correctly split declaration and definition between
  src/haproxy.c     | 105 +++---------------------------------------------
  2 files changed, 14 insertions(+), 207 deletions(-)
 
-diff --git a/include/haproxy.h b/include/haproxy.h
-index 048159d..e629c62 100644
 --- a/include/haproxy.h
 +++ b/include/haproxy.h
-@@ -124,125 +124,27 @@ extern const struct comp_algo comp_algos[];
+@@ -31,6 +31,8 @@
+ #include <unistd.h>
+ #include <string.h>
+ #include <ctype.h>
++#include <dirent.h>
++#include <sys/stat.h>
+ #include <sys/time.h>
+ #include <sys/types.h>
+ #include <sys/socket.h>
+@@ -76,6 +78,8 @@
+ #include <common/version.h>
+ 
+ #include <types/capture.h>
++#include <types/compression.h>
++#include <types/filters.h>
+ #include <types/global.h>
+ #include <types/acl.h>
+ #include <types/peers.h>
+@@ -89,6 +93,7 @@
+ #include <proto/checks.h>
+ #include <proto/connection.h>
+ #include <proto/fd.h>
++#include <proto/filters.h>
+ #include <proto/hdr_idx.h>
+ #include <proto/hlua.h>
+ #include <proto/listener.h>
+@@ -104,11 +109,16 @@
+ #include <proto/signal.h>
+ #include <proto/task.h>
+ #include <proto/dns.h>
++#include <proto/vars.h>
+ 
+ #ifdef USE_OPENSSL
+ #include <proto/ssl_sock.h>
+ #endif
+ 
++#ifdef USE_WURFL
++#include <proto/wurfl.h>
++#endif
++
+ #ifdef USE_DEVICEATLAS
+ #include <import/da.h>
+ #endif
+@@ -124,125 +134,27 @@ extern const struct comp_algo comp_algos
  /*********************************************************************/
  
  /* list of config files */
@@ -148,11 +189,9 @@ index 048159d..e629c62 100644
  
  /*
   * Local variables:
-diff --git a/src/haproxy.c b/src/haproxy.c
-index 45c323d..9658b46 100644
 --- a/src/haproxy.c
 +++ b/src/haproxy.c
-@@ -25,106 +25,11 @@
+@@ -25,116 +25,9 @@
   *
   */
  
@@ -162,6 +201,8 @@ index 45c323d..9658b46 100644
 -#include <unistd.h>
 -#include <string.h>
 -#include <ctype.h>
+-#include <dirent.h>
+-#include <sys/stat.h>
 -#include <sys/time.h>
 -#include <sys/types.h>
 -#include <sys/socket.h>
@@ -207,6 +248,8 @@ index 45c323d..9658b46 100644
 -#include <common/version.h>
 -
 -#include <types/capture.h>
+-#include <types/compression.h>
+-#include <types/filters.h>
 -#include <types/global.h>
 -#include <types/acl.h>
 -#include <types/peers.h>
@@ -220,6 +263,7 @@ index 45c323d..9658b46 100644
 -#include <proto/checks.h>
 -#include <proto/connection.h>
 -#include <proto/fd.h>
+-#include <proto/filters.h>
 -#include <proto/hdr_idx.h>
 -#include <proto/hlua.h>
 -#include <proto/listener.h>
@@ -235,9 +279,14 @@ index 45c323d..9658b46 100644
 -#include <proto/signal.h>
 -#include <proto/task.h>
 -#include <proto/dns.h>
+-#include <proto/vars.h>
 -
 -#ifdef USE_OPENSSL
 -#include <proto/ssl_sock.h>
+-#endif
+-
+-#ifdef USE_WURFL
+-#include <proto/wurfl.h>
 -#endif
 -
 -#ifdef USE_DEVICEATLAS
@@ -253,16 +302,14 @@ index 45c323d..9658b46 100644
 -extern const struct comp_algo comp_algos[];
 -
 -/*********************************************************************/
-+#include <haproxy.h>
  
  /* list of config files */
 -static struct list cfg_cfgfiles = LIST_HEAD_INIT(cfg_cfgfiles);
 +struct list cfg_cfgfiles = LIST_HEAD_INIT(cfg_cfgfiles);
-+
  int  pid;			/* current process id */
  int  relative_pid = 1;		/* process id starting at 1 */
  
-@@ -212,8 +117,8 @@ int jobs = 0;   /* number of active jobs (conns, listeners, active tasks, ...) *
+@@ -237,8 +130,8 @@ int jobs = 0;   /* number of active jobs
   * our ports. With 200 retries, that's about 2 seconds.
   */
  #define MAX_START_RETRIES	200
@@ -273,6 +320,28 @@ index 45c323d..9658b46 100644
  
  /* this is used to drain data, and as a temporary buffer for sprintf()... */
  struct chunk trash = { };
--- 
-1.9.1
-
+@@ -708,10 +601,10 @@ void init(int argc, char **argv)
+ 	/*
+ 	 * Initialize the previously static variables.
+ 	 */
+-    
++
+ 	totalconn = actconn = maxfd = listeners = stopping = 0;
+ 	killed = 0;
+-    
++
+ 
+ #ifdef HAPROXY_MEMMAX
+ 	global.rlimit_memmax_all = HAPROXY_MEMMAX;
+@@ -2104,9 +1997,9 @@ int haproxy_main(int argc, char **argv)
+ 	 */
+ 	run_poll_loop();
+ 
+-	/* Do some cleanup */ 
++	/* Do some cleanup */
+ 	deinit();
+-    
++
+ 	exit(0);
+ }
+ 

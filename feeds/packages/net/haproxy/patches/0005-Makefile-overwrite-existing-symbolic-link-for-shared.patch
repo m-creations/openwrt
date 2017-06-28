@@ -8,11 +8,9 @@ Subject: [PATCH 05/10] Makefile: overwrite existing symbolic link for shared
  Makefile | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/Makefile b/Makefile
-index 59c85b2..42a16e5 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -815,7 +815,7 @@ install-bin: haproxy $(EXTRA)
+@@ -863,7 +863,7 @@ install-bin:
  	install -d "$(DESTDIR)$(SBINDIR)"
  	install -d "$(DESTDIR)$(LIBDIR)"
  	install libhaproxy.so.$(VERSION) "$(DESTDIR)$(LIBDIR)"
@@ -21,6 +19,3 @@ index 59c85b2..42a16e5 100644
  	install haproxy $(EXTRA) "$(DESTDIR)$(SBINDIR)"
  
  install: install-bin install-man install-doc
--- 
-1.9.1
-
