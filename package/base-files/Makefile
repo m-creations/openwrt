@@ -31,7 +31,7 @@ endif
 define Package/base-files
   SECTION:=base
   CATEGORY:=Base system
-  DEPENDS:=+netifd +libc +procd +jsonfilter +SIGNED_PACKAGES:usign +SIGNED_PACKAGES:lede-keyring +fstools +fwtool
+  DEPENDS:=+libc +SIGNED_PACKAGES:usign +SIGNED_PACKAGES:lede-keyring
   TITLE:=Base filesystem for Lede
   URL:=http://openwrt.org/
   VERSION:=$(PKG_RELEASE)-$(REVISION)
