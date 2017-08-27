@@ -9,7 +9,7 @@ mainmenu "LEDE Configuration"
 config MODULES
 	option modules
 	bool
-	default n
+	default y
 
 config HAVE_DOT_CONFIG
 	bool
