@@ -123,6 +123,39 @@ github-release upload --user m-creations --repo openwrt --tag $release_tag --nam
 
 #+END_SRC
 
+** Specify the download location for Packages.gz file
+
+Run 'make menuconfig' and then navigat to
+
+Image configuration > Version configuration options
+
+Release distribution: OpenWrtDocker
+Release version nickname:
+Release version number: 17.01.2
+Release version code:
+Release repository: http://downloads.lede-project.org/releases/%v
+
+%v = 17.01.2
+%T = x86
+%S = x86/64
+%A = x86_64
+
+With the default setting, opkg downloads the following two files:
+
+http://downloads.lede-project.org/releases/17.01.2/targets/x86/64/packages/Packages.gz
+http://downloads.lede-project.org/releases/17.01.2/packages/x86_64/base/Packages.gz
+
+Manufacturer name: m-creations
+Manufacturer URL: https://github.com/m-creations/openwrt
+Bug reporting URL: https://github.com/m-creations/openwrt/issues
+Support URL:
+Product name:
+Hardware revision:
+Version number in file names: *
+Revision code in file names: *
+
+The latter two refer to the the image file names e.g. *-rootfs.tar.gz.
+
 * Release a new version
 
 Get, build and add [github-release](https://github.com/aktau/github-release) to your path.
