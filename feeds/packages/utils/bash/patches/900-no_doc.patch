@@ -1,6 +1,8 @@
---- a/Makefile.in
-+++ b/Makefile.in
-@@ -741,10 +741,8 @@ reconfig: force
+Index: bash-4.4/Makefile.in
+===================================================================
+--- bash-4.4.orig/Makefile.in
++++ bash-4.4/Makefile.in
+@@ -766,10 +766,8 @@ loadables:
  #	$(MAKE) -f $(srcdir)/Makefile $(MFLAGS) srcdir=$(srcdir)
  
  doc documentation:  force
