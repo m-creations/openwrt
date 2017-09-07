@@ -8,7 +8,7 @@ include $(TOPDIR)/rules.mk
 
 
 HASH_2.24 = 714d26c0daf6a8acf73fc8b6053349880c79f240f96ca57b00ab0ecbbead2b73
-REVISION_2.24 = 8c716c2
+REVISION_2.24 = d5a4092
 
 
 PKG_NAME:=glibc
