@@ -33,6 +33,11 @@ define Package/libffi
   MAINTAINER:=Peter Wagner <tripolar@gmx.at>
 endef
 
+define Package/libffi-dev
+	$(call Package/libffi)
+	TITLE+= include files
+endef
+
 define Package/libffi/description
 The libffi library provides a portable, high level programming interface to
 various calling conventions. This allows a programmer to call any function
@@ -77,5 +82,17 @@ define Package/libffi/install
 		$(1)/usr/lib/
 endef
 
+define Package/libffi-dev/install
+	$(INSTALL_DIR) $(1)/usr/lib/pkgconfig
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libffi.{so*,a,la} $(1)/usr/lib/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/pkgconfig/* $(1)/usr/lib/pkgconfig/
+
+	$(INSTALL_DIR) $(1)/usr/include
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libffi-$(PKG_VERSION)/include/*.h \
+		$(1)/usr/include/
+endef
+
+
 $(eval $(call HostBuild))
 $(eval $(call BuildPackage,libffi))
+$(eval $(call BuildPackage,libffi-dev))
