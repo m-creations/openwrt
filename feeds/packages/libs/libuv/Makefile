@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=libuv
-PKG_VERSION:=1.6.1
+PKG_VERSION:=1.16.1
 PKG_RELEASE:=1
 
 PKG_LICENSE_FILES:=LICENSE
@@ -17,7 +17,7 @@ PKG_MAINTAINER:=Luka Perkov <luka@openwrt.org>
 
 PKG_SOURCE:=$(PKG_NAME)-v$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=http://dist.libuv.org/dist/v$(PKG_VERSION)/
-PKG_MD5SUM:=51cfa3d8adc05852982e3c742ec3c039
+PKG_MD5SUM:=f8a148de529d5da78c8f8ac8c51cf911
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-v$(PKG_VERSION)
 PKG_BUILD_PARALLEL:=1
@@ -39,6 +39,11 @@ define Package/libuv/description
  libuv is a multi-platform support library with a focus on asynchronous I/O. It
  was primarily developed for use by Node.js, but it's also used by Luvit, Julia,
  pyuv, and others.
+endef
+
+define Package/libuv-dev
+	$(call Package/libuv)
+	TITLE+= include files
 endef
 
 define Build/Configure
@@ -70,4 +75,11 @@ define Package/libuv/install
 		$(1)/usr/lib/
 endef
 
+define Package/libuv-dev/install
+	$(INSTALL_DIR) $(1)/usr/include/
+	$(CP) $(PKG_INSTALL_DIR)/usr/include/* $(1)/usr/include/
+endef
+
+
 $(eval $(call BuildPackage,libuv))
+$(eval $(call BuildPackage,libuv-dev))
