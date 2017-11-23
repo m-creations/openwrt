@@ -40,6 +40,11 @@ define Package/libfixposix/description
   whose behaviour is inconsistent across *NIX flavours.
 endef
 
+define Package/libfixposix-dev
+	$(call Package/libfixposix)
+	TITLE+= include files
+endef
+
 TARGET_CFLAGS += -std=gnu99
 
 # define Build/InstallDev
@@ -56,4 +61,10 @@ define Package/libfixposix/install
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libfixposix.so* $(1)/usr/lib/
 endef
 
+define Package/libfixposix-dev/install
+	$(INSTALL_DIR) $(1)/usr/include
+	$(CP) -r $(PKG_INSTALL_DIR)/usr/include/* $(1)/usr/include/
+endef
+
 $(eval $(call BuildPackage,libfixposix))
+$(eval $(call BuildPackage,libfixposix-dev))
