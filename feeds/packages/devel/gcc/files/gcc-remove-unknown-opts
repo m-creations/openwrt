@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# We have to remove -no-pie which is not understood by gcc < 6
+#
+# This script is intended to be symbolically linked to cc, gcc, g++, c++
+# and at the end, it calls the correct binary, based on the name, with
+# which it was called.
+
+REAL_GNU_TARGET_NAME=
+
+declare -a ARGS
+for arg in "$@"; do
+    # remove no-pie
+    if [[ "$arg" = '-fno-pie' || "$arg" = '-no-pie' ]]; then
+	continue
+    fi
+    ARGS[${#ARGS[@]}]="$arg"
+done
+
+callee=$(basename $0)
+
+if [ "cc" = "$callee" ] ; then
+    callee=gcc
+fi
+
+# now call the correct binary
+${REAL_GNU_TARGET_NAME}-$callee ${ARGS[@]}

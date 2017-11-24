@@ -77,6 +77,7 @@ define Build/Configure
 			--disable-__cxa_atexit \
 			--enable-target-optspace \
 			--with-gnu-ld \
+			--enable-default-pie \
 			--disable-nls \
 			--disable-libmudflap \
 			--disable-multilib \
@@ -104,10 +105,13 @@ define Package/gcc/install
 	$(INSTALL_DIR) $(1)/usr/bin $(1)/usr/lib $(1)/usr/lib/$(PKG_NAME)/$(REAL_GNU_TARGET_NAME)/$(PKG_VERSION)
 	cp -ar $(PKG_INSTALL_DIR)/usr/include $(1)/usr
 	cp -a $(PKG_INSTALL_DIR)/usr/bin/{$(REAL_GNU_TARGET_NAME)-{g++,gcc},cpp,gcov} $(1)/usr/bin
-	ln -s $(REAL_GNU_TARGET_NAME)-g++ $(1)/usr/bin/c++
-	ln -s $(REAL_GNU_TARGET_NAME)-g++ $(1)/usr/bin/g++
+	$(INSTALL_BIN) ./files/gcc-remove-unknown-opts $(1)/usr/bin/gcc-remove-unknown-opts
+	$(SED) "s/^REAL_GNU_TARGET_NAME=.*/REAL_GNU_TARGET_NAME=$(REAL_GNU_TARGET_NAME)/g" $(1)/usr/bin/gcc-remove-unknown-opts
+	ln -s gcc-remove-unknown-opts $(1)/usr/bin/c++
+	ln -s gcc-remove-unknown-opts $(1)/usr/bin/g++
+	ln -s gcc-remove-unknown-opts $(1)/usr/bin/gcc
+	ln -s gcc-remove-unknown-opts $(1)/usr/bin/cc
 	ln -s $(REAL_GNU_TARGET_NAME)-g++ $(1)/usr/bin/$(REAL_GNU_TARGET_NAME)-c++
-	ln -s $(REAL_GNU_TARGET_NAME)-gcc $(1)/usr/bin/gcc
 	ln -s $(REAL_GNU_TARGET_NAME)-gcc $(1)/usr/bin/$(REAL_GNU_TARGET_NAME)-gcc-$(PKG_VERSION)
 	cp -ar $(PKG_INSTALL_DIR)/usr/lib/gcc $(1)/usr/lib
 	$(RM) $(1)/usr/lib/$(PKG_NAME)/$(REAL_GNU_TARGET_NAME)/$(PKG_VERSION)/*.a
