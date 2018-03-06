@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=graphviz
-PKG_VERSION:=2.38.0
+PKG_VERSION:=2.40.1
 PKG_RELEASE:=1
 
-PKG_SOURCE:=graphviz-$(PKG_VERSION).tar.gz
+PKG_SOURCE:=graphviz.tar.gz
 PKG_SOURCE_URL:=http://www.graphviz.org/pub/graphviz/stable/SOURCES
-PKG_MD5SUM:=5b6a829b2ac94efcd5fa3c223ed6d3ae
+PKG_MD5SUM:=4ea6fd64603536406166600bcc296fc8
 PKG_MAINTAINER:=Kambiz Darabi <darabi@m-creations.net>
 PKG_LICENSE:=Eclipse Public License
 
