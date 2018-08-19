@@ -76,7 +76,7 @@ ifeq ($(CONFIG_USE_UCLIBC),y)
 # http://lists.uclibc.org/pipermail/uclibc/2014-April/048326.html
 # so overwrite automatic detection and disable locale support
 PGSQL_CONFIG_VARS+= \
-		pgac_cv_type_locale_t=no
+		pgac_cv_type_locale_t=yes
 endif
 
 TARGET_CONFIGURE_OPTS+=$(PGSQL_CONFIG_VARS)
@@ -116,7 +116,7 @@ define Build/Configure
 			--enable-depend \
 			--with-system-timezone=/tmp \
 	);
-	$(MAKE) -C $(PKG_BUILD_DIR)/src/interfaces/ecpg/preproc CC="$(HOSTCC)" CFLAGS+="-I../../libpq"
+	$(MAKE) -C $(PKG_BUILD_DIR)/src/interfaces/ecpg/preproc CC="$(HOSTCC)" CFLAGS+="-I../../libpq -msse4.2"
 	mv $(PKG_BUILD_DIR)/src/interfaces/ecpg/preproc/ecpg \
 		$(PKG_BUILD_DIR)/src/interfaces/ecpg/preproc/ecpg.host
 	$(MAKE) -C $(PKG_BUILD_DIR)/src/timezone CC="$(HOSTCC)"
@@ -172,7 +172,7 @@ define Build/Configure
 	$(SED) 's@ECPG = ../../preproc/ecpg@ECPG = ../../preproc/ecpg.host@' $(PKG_BUILD_DIR)/src/interfaces/ecpg/test/Makefile.regress
 endef
 
-TARGET_CFLAGS += $(FPIC) -lpthread
+TARGET_CFLAGS += $(FPIC) -lpthread -msse4.2
 
 # because PROFILE means something else in the project Makefile
 unexport PROFILE

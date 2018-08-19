@@ -36,8 +36,9 @@ start_service() {
 	group_exists postgres 5432 || group_add postgres 5432
 
 	if [ ! -d "${pgdata}" ]; then
-		echo "Create the data directory (${pgdata}) and try again"
-		return 1
+		echo "Creating the data directory (${pgdata})"
+		mkdir "${pgdata}"
+		chown postgres:postgres "${pgdata}"
 	fi
 
 	fix_perms
