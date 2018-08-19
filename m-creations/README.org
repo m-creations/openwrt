@@ -113,17 +113,9 @@ make package/twisted/install V=s | tee build.log
 # update Packages.gz
 make package/index
 
-# upload the new file and Packes.gz to github (cf. Release a new version)
-
-release_tag=v20150602
-ipk=bin/x86-glibc/packages/twisted_10.2.0-1_x86_64.ipk
-github-release upload --user m-creations --repo openwrt --tag $release_tag --name $(basename $ipk) --file $ipk
-# delete Packages.gz, Packages, and Packages.sig in github manually (not possible with github-release)
-github-release upload --user m-creations --repo openwrt --tag $release_tag --name Packages.gz --file bin/x86-glibc/packages/Packages.gz
-github-release upload --user m-creations --repo openwrt --tag $release_tag --name Packages --file bin/x86-glibc/packages/Packages
-github-release upload --user m-creations --repo openwrt --tag $release_tag --name Packages.sig --file bin/x86-glibc/packages/Packages.sig
-
 #+END_SRC
+
+Then [[rsync]] the packages subdir to the web server which handles openwrt.m-creations.net.
 
 * Release a new version
 
@@ -170,10 +162,12 @@ Note that failed files might need to be deleted manually through the
 github web interface, befor above code is run.
 
 * Rsync binaries and packages to galen web server
+<<rsync>>
 
-sudo rsync -av --delete /export/repo/openwrt/bin/ar71xx/ /var/www/openwrt/snapshot/14-dev/ar71xx/
+rsync -av --delete bin/x86-glibc/packages/ /var/www/openwrt/15.05/x86/64/ 
 
 Note that openwrt.m-creations.net points to haproxy which runs on ports 80 and 443 on galen.
+
 * Working with Quilt patches
 
 See https://wiki.openwrt.org/doc/devel/patches
