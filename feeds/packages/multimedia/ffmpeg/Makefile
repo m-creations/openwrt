@@ -369,6 +369,7 @@ FFMPEG_CONFIGURE:= \
 	--disable-debug \
 	\
 	--enable-gpl \
+	--enable-nonfree \
 	--enable-version3 \
 	\
 	--disable-altivec \
